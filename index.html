@@ -264,7 +264,7 @@
           <span style="width: 42px; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--color-text) 26%, transparent);"></span>
         </div>
       </sc-if>
-      <div style="padding: 18px 22px 40px; overflow-y: auto;">
+      <div ref="{{ panelBodyRef }}" onPointerDown="{{ panelContentDragStart }}" style="padding: 18px 22px 40px; overflow-y: auto; flex: 1 1 auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y;">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; background: {{ detail.color }};"></span>
           <span style="font-size: 11.5px; color: color-mix(in srgb, var(--color-text) 62%, transparent);">{{ detail.club }}</span>
@@ -315,7 +315,7 @@ class Component extends DCLogic {
 
   L = {
     mk: {
-      app: "Следен Врв", tagline: "Тури од повеќе планинарски клуба",
+      app: "Следен Врв", tagline: "Тури од три планинарски клуба",
       view: "Приказ", calendar: "Календар", list: "Листа",
       prefs: "Јазик и тема", language: "Јазик", theme: "Тема",
       themeSystem: "Системска", themeLight: "Светла", themeDark: "Темна",
@@ -332,7 +332,7 @@ class Component extends DCLogic {
       thisSat: "Оваа сабота", thisSun: "Оваа недела", nextSat: "Следната сабота", nextSun: "Следната недела",
       inDays: (n) => "За " + n + " дена",
       tours: (n) => n + " тури",
-      noMonth: (m) => "Нема тури во " + m + " — проверете го следниот месец",
+      noMonth: (m) => "Ниедна тура во " + m + " — пробајте следниот месец.",
       updated: (d, t) => "Освежено " + d + " во " + t,
       departure: "Тргнување", timeSuffix: " часот", meeting: "Собирно место", price: "Цена", difficulty: "Тежина", organiser: "Организатор",
       sameDay: "Истиот ден", openPost: "Отвори објава", copy: "Копирај линк", copied: "Копирано",
@@ -392,6 +392,7 @@ class Component extends DCLogic {
     window.removeEventListener("hashchange", this._onNav);
     window.removeEventListener("popstate", this._onNav);
     window.removeEventListener("keydown", this._onKey);
+    this.endPanelDragListeners();
     this.endMonthSwipeListeners();
     clearTimeout(this._monthExitTimer);
     clearTimeout(this._monthEnterTimer);
@@ -519,26 +520,95 @@ class Component extends DCLogic {
     else this.setState({ copied: true });
   }
 
+  endPanelDragListeners() {
+    if (this._panelDragMove) window.removeEventListener("pointermove", this._panelDragMove);
+    if (this._panelDragUp) window.removeEventListener("pointerup", this._panelDragUp);
+    if (this._panelDragCancel) window.removeEventListener("pointercancel", this._panelDragCancel);
+    this._panelDragMove = null;
+    this._panelDragUp = null;
+    this._panelDragCancel = null;
+  }
+
   dragStart(e) {
+    this.panelDragStart(e, true);
+  }
+
+  panelContentDragStart(e) {
+    this.panelDragStart(e, false);
+  }
+
+  panelDragStart(e, fromHandle) {
     const el = this._panel;
-    if (!el) return;
+    const body = this._panelBody;
+    if (!el || !this.state.mobile) return;
+    if (e.button && e.button !== 0) return;
+    this.endPanelDragListeners();
+
     const startY = e.clientY;
-    el.style.transition = "none";
-    const move = (ev) => { el.style.transform = "translateY(" + Math.max(0, ev.clientY - startY) + "px)"; };
-    const up = (ev) => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      if (Math.max(0, ev.clientY - startY) > 110) {
-        el.style.transition = "transform .2s ease";
+    const startX = e.clientX;
+    const startedAt = Date.now();
+    let dragging = false;
+    let lastY = startY;
+
+    const beginDrag = (ev) => {
+      dragging = true;
+      el.style.transition = "none";
+      el.style.willChange = "transform";
+      try { e.currentTarget.setPointerCapture && e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+      if (ev && ev.cancelable) ev.preventDefault();
+    };
+
+    if (fromHandle) beginDrag(e);
+
+    this._panelDragMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      lastY = ev.clientY;
+
+      if (!dragging) {
+        if (Math.abs(dx) > 18 && Math.abs(dx) > Math.abs(dy)) {
+          this.endPanelDragListeners();
+          return;
+        }
+        if (dy < -6 || (body && body.scrollTop > 0)) return;
+        if (dy < 8 || Math.abs(dy) < Math.abs(dx) * 1.15) return;
+        beginDrag(ev);
+      }
+
+      if (ev.cancelable) ev.preventDefault();
+      const pull = Math.max(0, dy);
+      const eased = pull < 140 ? pull : 140 + (pull - 140) * 0.42;
+      el.style.transform = "translateY(" + eased.toFixed(1) + "px)";
+    };
+
+    this._panelDragUp = () => {
+      this.endPanelDragListeners();
+      if (!dragging) return;
+      const dy = Math.max(0, lastY - startY);
+      const velocity = dy / Math.max(1, Date.now() - startedAt);
+      const shouldClose = dy > 118 || (dy > 56 && velocity > 0.45);
+      el.style.willChange = "";
+      if (shouldClose) {
+        el.style.transition = "transform .22s cubic-bezier(.22,.8,.25,1)";
         el.style.transform = "translateY(110%)";
-        setTimeout(() => this.close(), 170);
+        setTimeout(() => this.close(), 180);
       } else {
-        el.style.transition = "transform .22s ease";
+        el.style.transition = "transform .24s cubic-bezier(.2,.9,.2,1)";
         el.style.transform = "translateY(0)";
       }
     };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
+
+    this._panelDragCancel = () => {
+      this.endPanelDragListeners();
+      if (!dragging) return;
+      el.style.willChange = "";
+      el.style.transition = "transform .24s cubic-bezier(.2,.9,.2,1)";
+      el.style.transform = "translateY(0)";
+    };
+
+    window.addEventListener("pointermove", this._panelDragMove, { passive: false });
+    window.addEventListener("pointerup", this._panelDragUp);
+    window.addEventListener("pointercancel", this._panelDragCancel);
   }
 
   endMonthSwipeListeners() {
@@ -806,7 +876,9 @@ class Component extends DCLogic {
       showBackdrop: isMobile && detailOpen,
       panelStyle,
       panelRef: (el) => { this._panel = el; },
+      panelBodyRef: (el) => { this._panelBody = el; },
       dragStart: (e) => this.dragStart(e),
+      panelContentDragStart: (e) => this.panelContentDragStart(e),
       close: () => this.close(),
       share: () => this.share(),
       shareLabel: st.copied ? L.copied : L.copy
