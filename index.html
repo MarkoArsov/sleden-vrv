@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/classical-668ace92-beca-41c2-b77b-3915a45aeb50/styles.css">
+<script src="_ds/classical-668ace92-beca-41c2-b77b-3915a45aeb50/_ds_bundle.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { -webkit-font-smoothing: antialiased; }
+  :root[data-theme="dark"] {
+    --color-bg: #26231f;
+    --color-surface: #302c27;
+    --color-text: #f4eee4;
+    --color-divider: color-mix(in srgb, #f4eee4 14%, transparent);
+    --color-accent: #e6b169;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="system"], :root:not([data-theme]) {
+      --color-bg: #26231f;
+      --color-surface: #302c27;
+      --color-text: #f4eee4;
+      --color-divider: color-mix(in srgb, #f4eee4 14%, transparent);
+      --color-accent: #e6b169;
+    }
+  }
+  @keyframes skel { 0%, 100% { opacity: .3 } 50% { opacity: .13 } }
+  @keyframes sheetup { from { transform: translateY(18px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+  @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
+</style>
+</helmet>
+<div style="min-height: 100vh; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); font-variant-numeric: tabular-nums;">
+  <div style="{{ pageStyle }}">
+    <div style="max-width: 620px; margin: 0 auto; padding: 26px 20px 110px;">
+
+      <header style="display: flex; align-items: flex-end; gap: 16px 12px; flex-wrap: wrap;">
+        <div>
+          <svg viewBox="0 0 64 18" width="64" height="18" aria-hidden="true" style="display: block; overflow: visible;">
+            <polyline points="0,17 12,4 19,11 30,1 41,12 50,7 64,17" fill="none" stroke="var(--color-accent)" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"></polyline>
+          </svg>
+          <h1 style="font-size: 30px; margin: 8px 0 2px; letter-spacing: -0.015em; font-weight: 400;">{{ appName }}</h1>
+          <p style="margin: 0; font-size: 12.5px; font-style: italic; color: color-mix(in srgb, var(--color-text) 55%, transparent);">{{ tagline }}</p>
+        </div>
+        <div style="margin-left: auto; flex: 1 1 220px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative;">
+          <div class="seg" role="group" aria-label="{{ t.view }}">
+            <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" checked="{{ calChecked }}" onChange="{{ pickCal }}">{{ t.calendar }}</label>
+            <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" checked="{{ listChecked }}" onChange="{{ pickList }}">{{ t.list }}</label>
+          </div>
+          <button type="button" class="btn btn-ghost" onClick="{{ toggleMenu }}" aria-haspopup="menu" aria-expanded="{{ menuOpen }}" aria-label="{{ t.prefs }}" style="min-height: 40px; min-width: 44px; font-size: 12px; letter-spacing: 0.06em; color: color-mix(in srgb, var(--color-text) 55%, transparent);">{{ prefsLabel }}</button>
+          <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div onClick="{{ closeMenu }}" style="position: fixed; inset: 0; z-index: 30;"></div>
+              <div role="menu" style="position: absolute; top: 100%; right: 0; margin-top: 8px; z-index: 31; width: 214px; padding: 14px 16px 16px; background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: 8px; box-shadow: var(--shadow-md); animation: fadein .14s ease;">
+                <p style="margin: 0 0 8px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 46%, transparent);">{{ t.language }}</p>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <sc-for list="{{ langOptions }}" as="o" hint-placeholder-count="2">
+                    <label class="radio" style="min-height: 32px;"><input type="radio" name="lang" checked="{{ o.checked }}" onChange="{{ o.pick }}"><span class="dot"></span>{{ o.label }}</label>
+                  </sc-for>
+                </div>
+                <div style="height: 1px; background: var(--color-divider); margin: 14px 0;"></div>
+                <p style="margin: 0 0 8px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 46%, transparent);">{{ t.theme }}</p>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <sc-for list="{{ themeOptions }}" as="o" hint-placeholder-count="3">
+                    <label class="radio" style="min-height: 32px;"><input type="radio" name="theme" checked="{{ o.checked }}" onChange="{{ o.pick }}"><span class="dot"></span>{{ o.label }}</label>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </header>
+
+      <sc-if value="{{ isStale }}" hint-placeholder-val="{{ false }}">
+        <p style="margin: 20px 0 0; font-size: 12.5px; font-style: italic; color: color-mix(in srgb, var(--color-text) 58%, transparent); border-left: 2px solid var(--color-accent); padding-left: 10px;">{{ t.stale }}</p>
+      </sc-if>
+
+      <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+        <div aria-busy="true" aria-label="{{ t.loading }}" style="padding-top: 40px;">
+          <div style="height: 30px; width: 42%; border-radius: 4px; background: var(--color-text); animation: skel 1.5s ease-in-out infinite;"></div>
+          <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-top: 26px;">
+            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out infinite;"></div>
+            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .1s infinite;"></div>
+            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .2s infinite;"></div>
+            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .3s infinite;"></div>
+            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .4s infinite;"></div>
+            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .5s infinite;"></div>
+            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .6s infinite;"></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 26px; margin-top: 44px;">
+            <div style="height: 22px; width: 72%; border-radius: 4px; background: var(--color-text); animation: skel 1.5s ease-in-out .2s infinite;"></div>
+            <div style="height: 22px; width: 58%; border-radius: 4px; background: var(--color-text); animation: skel 1.5s ease-in-out .35s infinite;"></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+        <div role="alert" style="padding-top: 54px;">
+          <h2 style="font-size: 26px; margin: 0 0 10px; font-weight: 400;">{{ t.errorTitle }}</h2>
+          <p style="font-size: 14.5px; max-width: 40ch; line-height: 1.7; color: color-mix(in srgb, var(--color-text) 64%, transparent);">{{ t.errorBody }}</p>
+          <button type="button" class="btn btn-primary" onClick="{{ retry }}" style="min-height: 44px; margin-top: 8px;">{{ t.retry }}</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 76px 0 40px;">
+          <h2 style="font-size: 33px; font-weight: 400; margin: 0 0 14px; line-height: 1.14;">{{ t.emptyTitle }}</h2>
+          <p style="font-size: 15px; max-width: 38ch; line-height: 1.75; color: color-mix(in srgb, var(--color-text) 62%, transparent); margin: 0;">{{ t.emptyBody }}</p>
+          <p style="font-size: 12px; margin: 30px 0 0; color: color-mix(in srgb, var(--color-text) 40%, transparent);">{{ updatedText }}</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasHikes }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <sc-if value="{{ showCal }}" hint-placeholder-val="{{ true }}">
+            <div style="padding-top: 34px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <h2 style="font-family: var(--font-heading); font-weight: 400; font-size: 27px; margin: 0; letter-spacing: -0.01em;">{{ monthLabel }}</h2>
+                <button type="button" class="btn btn-ghost" aria-label="{{ t.prevMonth }}" onClick="{{ prevMonth }}" style="width: 44px; height: 44px; margin-left: auto; font-size: 17px;">←</button>
+                <button type="button" class="btn btn-ghost" aria-label="{{ t.nextMonth }}" onClick="{{ nextMonth }}" style="width: 44px; height: 44px; font-size: 17px;">→</button>
+              </div>
+              <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-top: 20px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 34%, transparent); text-align: center;">
+                <sc-for list="{{ weekdays }}" as="w" hint-placeholder-count="7">
+                  <span style="{{ w.style }}">{{ w.label }}</span>
+                </sc-for>
+              </div>
+              <div role="grid" aria-label="{{ monthLabel }}" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-top: 8px;">
+                <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
+                  <div style="{{ c.cellStyle }}">
+                    <sc-if value="{{ c.hike }}" hint-placeholder-val="{{ false }}">
+                      <button type="button" onClick="{{ c.open }}" aria-label="{{ c.aria }}" style="width: 100%; min-width: 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: transparent; cursor: pointer; font: inherit; color: inherit; padding: 3px 0; border-radius: 8px; transition: transform .15s ease;" style-hover="transform: translateY(-2px);">
+                        <span style="{{ c.markerStyle }}">{{ c.num }}</span>
+                        <sc-if value="{{ c.multi }}" hint-placeholder-val="{{ false }}">
+                          <span style="font-size: 9px; letter-spacing: 0.06em; color: color-mix(in srgb, var(--color-text) 55%, transparent);">{{ c.countLabel }}</span>
+                        </sc-if>
+                      </button>
+                    </sc-if>
+                    <sc-if value="{{ c.plain }}" hint-placeholder-val="{{ true }}">
+                      <span style="{{ c.numStyle }}">{{ c.num }}</span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+
+              <sc-if value="{{ hasMonthHikes }}" hint-placeholder-val="{{ true }}">
+                <div style="margin-top: 34px; display: flex; flex-direction: column; gap: 4px;">
+                  <sc-for list="{{ monthHikes }}" as="m" hint-placeholder-count="2">
+                    <button type="button" onClick="{{ m.open }}" aria-label="{{ m.aria }}" style="width: 100%; display: grid; grid-template-columns: 4px 74px 1fr; align-items: center; gap: 0 14px; text-align: left; background: transparent; border: 0; padding: 11px 8px; border-radius: 8px; min-height: 44px; cursor: pointer; font: inherit; color: inherit;" style-hover="background: color-mix(in srgb, var(--color-text) 6%, transparent);">
+                      <span aria-hidden="true" style="align-self: stretch; border-radius: 2px; background: {{ m.color }};"></span>
+                      <span style="font-size: 12.5px; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ m.day }}</span>
+                      <span style="font-family: var(--font-heading); font-weight: 600; font-size: 17px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">{{ m.destination }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ noMonthHikes }}" hint-placeholder-val="{{ false }}">
+                <p style="margin: 30px 0 0; font-size: 13.5px; font-style: italic; color: color-mix(in srgb, var(--color-text) 46%, transparent);">{{ noMonthText }}</p>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ showList }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
+                <section style="padding-top: 34px;">
+                  <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 600; letter-spacing: 0.02em; color: color-mix(in srgb, var(--color-text) 52%, transparent); margin: 0 0 8px;">{{ g.label }}</h3>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <sc-for list="{{ g.items }}" as="h" hint-placeholder-count="2">
+                      <button type="button" onClick="{{ h.open }}" aria-label="{{ h.aria }}" style="width: 100%; display: grid; grid-template-columns: 4px 1fr auto; align-items: start; gap: 0 15px; text-align: left; background: transparent; border: 0; padding: 14px 8px; border-radius: 8px; cursor: pointer; font: inherit; color: inherit; min-height: 44px;" style-hover="background: color-mix(in srgb, var(--color-text) 6%, transparent);">
+                        <span aria-hidden="true" style="align-self: stretch; min-height: 40px; border-radius: 2px; background: {{ h.color }};"></span>
+                        <span>
+                          <span style="display: block; font-family: var(--font-heading); font-weight: 600; font-size: 21px; line-height: 1.24; letter-spacing: -0.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ h.destination }}</span>
+                          <span style="display: block; margin-top: 5px; font-size: 12.5px; font-style: italic; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ h.meta }}</span>
+                        </span>
+                        <span style="font-size: 13px; color: color-mix(in srgb, var(--color-text) 58%, transparent); padding-top: 3px;">{{ h.time }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </section>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <ul style="list-style: none; margin: 44px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px;">
+            <sc-for list="{{ legend }}" as="l" hint-placeholder-count="3">
+              <li style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: color-mix(in srgb, var(--color-text) 58%, transparent);">
+                <span aria-hidden="true" style="width: 9px; height: 9px; border-radius: 50%; background: {{ l.color }};"></span>{{ l.name }}
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+      </sc-if>
+
+      <p style="margin: 22px 0 0; font-size: 11.5px; line-height: 1.7; color: color-mix(in srgb, var(--color-text) 38%, transparent);">{{ updatedText }}</p>
+    </div>
+  </div>
+
+  <sc-if value="{{ showBackdrop }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ close }}" style="position: fixed; inset: 0; background: color-mix(in srgb, #16130f 55%, transparent); z-index: 40; animation: fadein .18s ease;"></div>
+  </sc-if>
+
+  <sc-if value="{{ detail }}" hint-placeholder-val="{{ false }}">
+    <aside role="dialog" aria-modal="{{ isMobile }}" aria-label="{{ t.detailLabel }}" ref="{{ panelRef }}" style="{{ panelStyle }}">
+      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+        <div onPointerDown="{{ dragStart }}" style="padding: 11px 0 4px; cursor: grab; touch-action: none; display: flex; justify-content: center; flex: none;">
+          <span style="width: 42px; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--color-text) 26%, transparent);"></span>
+        </div>
+      </sc-if>
+      <div style="padding: 18px 22px 40px; overflow-y: auto;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; background: {{ detail.color }};"></span>
+          <span style="font-size: 11.5px; color: color-mix(in srgb, var(--color-text) 62%, transparent);">{{ detail.club }}</span>
+          <button type="button" class="btn btn-ghost" aria-label="{{ t.close }}" onClick="{{ close }}" style="margin-left: auto; min-width: 44px; min-height: 44px; font-size: 18px;">✕</button>
+        </div>
+        <p style="font-family: var(--font-heading); font-size: 27px; font-style: italic; font-weight: 400; margin: 14px 0 4px; line-height: 1.1; letter-spacing: -0.01em;">{{ detail.when }}</p>
+        <h2 style="font-size: 24px; line-height: 1.26; margin: 0 0 6px; text-wrap: pretty;">{{ detail.destination }}</h2>
+        <p style="font-size: 13px; margin: 0; color: color-mix(in srgb, var(--color-text) 56%, transparent);">{{ detail.fullDate }}</p>
+        <dl style="margin: 26px 0 0; display: grid; grid-template-columns: 1fr; gap: 19px;">
+          <sc-for list="{{ detail.rows }}" as="r" hint-placeholder-count="3">
+            <div>
+              <dt style="font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 46%, transparent); margin-bottom: 4px;">{{ r.label }}</dt>
+              <dd style="margin: 0; font-size: 14.5px; line-height: 1.6; text-wrap: pretty;">{{ r.value }}</dd>
+            </div>
+          </sc-for>
+        </dl>
+        <sc-if value="{{ detail.hasSiblings }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: 26px;">
+            <p style="font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 46%, transparent); margin: 0 0 6px;">{{ t.sameDay }}</p>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <sc-for list="{{ detail.siblings }}" as="s" hint-placeholder-count="1">
+                <button type="button" onClick="{{ s.open }}" style="display: grid; grid-template-columns: 4px 1fr; gap: 12px; align-items: center; text-align: left; background: transparent; border: 0; padding: 10px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; font: inherit; color: inherit;" style-hover="background: color-mix(in srgb, var(--color-text) 7%, transparent);">
+                  <span aria-hidden="true" style="align-self: stretch; border-radius: 2px; background: {{ s.color }};"></span>
+                  <span style="font-family: var(--font-heading); font-weight: 600; font-size: 16px; line-height: 1.3;">{{ s.destination }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px;">
+          <a class="btn btn-primary" href="{{ detail.sourceUrl }}" target="_blank" rel="noopener" style="min-height: 44px;">{{ t.openPost }}</a>
+          <button type="button" class="btn btn-secondary" onClick="{{ share }}" style="min-height: 44px;">{{ shareLabel }}</button>
+        </div>
+      </div>
+    </aside>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;dataSource&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sample&quot;,&quot;dense&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;live&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Демо податоци&quot;},&quot;defaultView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;calendar&quot;,&quot;list&quot;],&quot;default&quot;:&quot;calendar&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Приказ&quot;},&quot;staleDemo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Демо податоци&quot;}}">
+class Component extends DCLogic {
+  API_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTLtcsEkLOLlMNSXC-TyWq9N7OkPZZHS9DfdMRZliourocwmPAPm0a1i1fxixSLQ3KqhmgY8pjTckkATUL8JnFYdc1f6w0n1sFkP0TT5HOarCbOb4qQpbUwljWV35nRgd3rBkLMyW54OscfLEkdAvHOvOU2di9IRJYuk39Jt4ODk7cJC227eJQvJRp_7PKWMTnnDDtLET89XMQeaZ8ThxNN_uBKZpRqXUqhTyrV8v2ZRqlVPvbGDiDvXqelVcbmKeLpq_fUkamg9xo73o9Ezd_qQ_fGoA&lib=MVMzfW7giOr253XPEZ6bqqgJ2S0OvVxq0";
+
+  CLUBS = {
+    psk_stratus: { name: "ПСК Стратус", nameEn: "PSK Stratus", light: "#96671a", dark: "#eebc76" },
+    ilovehikingmacedonia: { name: "I Love Hiking Macedonia", nameEn: "I Love Hiking Macedonia", light: "#1f6f66", dark: "#83cfc2" },
+    pskh2o: { name: "ПСК Х2О", nameEn: "PSK H2O", light: "#9a3946", dark: "#f2a0a6" }
+  };
+
+  L = {
+    mk: {
+      app: "Следен Врв", tagline: "Тури од три планинарски клуба",
+      view: "Приказ", calendar: "Календар", list: "Листа",
+      prefs: "Јазик и тема", language: "Јазик", theme: "Тема",
+      themeSystem: "Системска", themeLight: "Светла", themeDark: "Темна",
+      loading: "Се вчитува", stale: "Податоците се од пред повеќе од два дена — може да има нови објави.",
+      errorTitle: "Податоците не се вчитаа", errorBody: "Врската со изворите не успеа. Ништо не е изгубено, пробајте повторно.", retry: "Пробај повторно",
+      emptyTitle: "Викендот е слободен", emptyBody: "Ниту еден клуб не објавил тура за следните три недели. Обично објавуваат неделата пред тргнување.",
+      prevMonth: "Претходен месец", nextMonth: "Следен месец",
+      groups: ["Овој викенд", "Следната недела", "Подоцна"],
+      weekdays: ["Пон","Вто","Сре","Чет","Пет","Саб","Нед"],
+      months: ["јануари","февруари","март","април","мај","јуни","јули","август","септември","октомври","ноември","декември"],
+      dow: ["недела","понеделник","вторник","среда","четврток","петок","сабота"],
+      dow3: ["нед","пон","вто","сре","чет","пет","саб"],
+      today: "Денес", tomorrow: "Утре", past: "Изминато",
+      thisSat: "Оваа сабота", thisSun: "Оваа недела", nextSat: "Следната сабота", nextSun: "Следната недела",
+      inDays: (n) => "За " + n + " дена",
+      tours: (n) => n + " тури",
+      noMonth: (m) => "Ниедна тура во " + m + " — пробајте следниот месец.",
+      updated: (d, t) => "Освежено " + d + " во " + t,
+      departure: "Тргнување", timeSuffix: " часот", meeting: "Собирно место", price: "Цена", difficulty: "Тежина", organiser: "Организатор",
+      sameDay: "Истиот ден", openPost: "Отвори објава", copy: "Копирај линк", copied: "Копирано",
+      close: "Затвори", detailLabel: "Детали за турата"
+    },
+    en: {
+      app: "Next Peak", tagline: "Hikes from three mountaineering clubs",
+      view: "View", calendar: "Calendar", list: "List",
+      prefs: "Language and theme", language: "Language", theme: "Theme",
+      themeSystem: "System", themeLight: "Light", themeDark: "Dark",
+      loading: "Loading", stale: "This schedule is more than two days old — there may be newer posts.",
+      errorTitle: "Couldn’t load the schedule", errorBody: "The sources didn’t answer. Nothing is lost — give it another try.", retry: "Try again",
+      emptyTitle: "The weekend is free", emptyBody: "None of the three clubs has posted a hike for the next three weeks. They usually post the week before departure.",
+      prevMonth: "Previous month", nextMonth: "Next month",
+      groups: ["This weekend", "Next week", "Later"],
+      weekdays: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+      months: ["January","February","March","April","May","June","July","August","September","October","November","December"],
+      dow: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+      dow3: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
+      today: "Today", tomorrow: "Tomorrow", past: "Past",
+      thisSat: "This Saturday", thisSun: "This Sunday", nextSat: "Next Saturday", nextSun: "Next Sunday",
+      inDays: (n) => "In " + n + " days",
+      tours: (n) => n + " hikes",
+      noMonth: (m) => "No hikes in " + m + " — try the next month.",
+      updated: (d, t) => "Updated " + d + " at " + t,
+      departure: "Departure", timeSuffix: "", meeting: "Meeting point", price: "Price", difficulty: "Difficulty", organiser: "Organiser",
+      sameDay: "Same day", openPost: "Open the post", copy: "Copy link", copied: "Copied",
+      close: "Close", detailLabel: "Hike details"
+    }
+  };
+
+  state = { status: "ok", data: null, view: "calendar", selected: null, mobile: false, systemDark: false, theme: "system", lang: "mk", copied: false, monthOffset: 0, menuOpen: false };
+
+  componentDidMount() {
+    const mq = window.matchMedia("(max-width: 860px)");
+    const dk = window.matchMedia("(prefers-color-scheme: dark)");
+    this._sync = () => this.setState({ mobile: mq.matches, systemDark: dk.matches });
+    mq.addEventListener("change", this._sync);
+    dk.addEventListener("change", this._sync);
+    let view = "calendar", theme = "system", lang = "mk";
+    try {
+      const v = localStorage.getItem("nextpeak-view"); if (v === "calendar" || v === "list") view = v;
+      const th = localStorage.getItem("nextpeak-theme"); if (th === "light" || th === "dark" || th === "system") theme = th;
+      const lg = localStorage.getItem("nextpeak-lang"); if (lg === "mk" || lg === "en") lang = lg;
+    } catch (e) {}
+    const urlLang = new URLSearchParams(location.search).get("lang");
+    if (urlLang === "mk" || urlLang === "en") lang = urlLang;
+    this._onNav = () => this.setState({ selected: this.hashId(), copied: false });
+    window.addEventListener("hashchange", this._onNav);
+    window.addEventListener("popstate", this._onNav);
+    this._onKey = (e) => { if (e.key === "Escape") { if (this.state.menuOpen) this.setState({ menuOpen: false }); else if (this.state.selected) this.close(); } };
+    window.addEventListener("keydown", this._onKey);
+    this.setState({ mobile: mq.matches, systemDark: dk.matches, view: this.props.defaultView || view, theme, lang, selected: this.hashId() }, () => this.applyEnv());
+    this.load();
+  }
+  componentWillUnmount() {
+    window.removeEventListener("hashchange", this._onNav);
+    window.removeEventListener("popstate", this._onNav);
+    window.removeEventListener("keydown", this._onKey);
+  }
+  componentDidUpdate(prev) {
+    if (prev.dataSource !== this.props.dataSource) this.load();
+    this.applyEnv();
+  }
+
+  applyEnv() {
+    const d = document.documentElement;
+    d.setAttribute("data-theme", this.state.theme);
+    d.setAttribute("lang", this.state.lang);
+    document.title = this.t().app;
+    const u = new URL(location.href);
+    if (u.searchParams.get("lang") !== this.state.lang) {
+      u.searchParams.set("lang", this.state.lang);
+      history.replaceState(null, "", u.pathname + u.search + u.hash);
+    }
+  }
+
+  t() { return this.L[this.state.lang] || this.L.mk; }
+  isDark() { return this.state.theme === "dark" || (this.state.theme === "system" && this.state.systemDark); }
+
+  hashId() {
+    const m = (location.hash || "").match(/hike=([\w-]+)/);
+    return m ? m[1] : null;
+  }
+
+  iso(d) { return new Date(d.getTime() - d.getTimezoneOffset() * 60e3).toISOString().slice(0, 10); }
+  addDays(base, n) { const d = new Date(base.getTime()); d.setDate(d.getDate() + n); return d; }
+  today() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+
+  sampleHikes() {
+    return [
+      { id: "DcSlvmoMpk6", club: "psk_stratus", date: "2026-09-05", time: "04:00", destination: "Дурмитор – Боботов Кук, Црно, Змиње и Барно Езеро", destinationEn: null, meetingPoint: "Железничка Станица Скопје – Пошта 2", price: "160 евра / 9.850 денари", difficulty: null, difficultyEn: null, detailsFrom: "caption", sourceUrl: "https://www.instagram.com/p/DcSlvmoMpk6/", postedAt: "2026-08-21T05:33:36.000Z" },
+      { id: "DcRSJhDCjUS", club: "ilovehikingmacedonia", date: "2026-09-06", time: "05:00", destination: "Голем Кораб 2764 м", destinationEn: "Golem Korab 2764 m", meetingPoint: "Железничка Станица Скопје – Пошта 2", price: "1200 ден по човек за организиран превоз; влез во НП Маврово 100 ден по лице", difficulty: "тешка тура", difficultyEn: "difficult route", detailsFrom: "both", sourceUrl: "https://www.instagram.com/p/DcRSJhDCjUS/", postedAt: "2026-08-20T17:19:24.000Z" }
+    ];
+  }
+  denseHikes() {
+    const t = this.today();
+    const sat = this.addDays(t, (6 - t.getDay() + 7) % 7 || 7);
+    const at = (n) => this.iso(this.addDays(sat, n));
+    return [
+      { id: "d1", club: "ilovehikingmacedonia", date: at(0), time: "05:00", destination: "Голем Кораб 2764 м", destinationEn: "Golem Korab 2764 m", meetingPoint: "Железничка Станица Скопје – Пошта 2", price: "1200 ден по човек за организиран превоз; влез во НП Маврово 100 ден по лице", difficulty: "тешка тура", difficultyEn: "difficult route", detailsFrom: "both", sourceUrl: "https://www.instagram.com/p/DcRSJhDCjUS/", postedAt: null },
+      { id: "d2", club: "pskh2o", date: at(0), time: "07:00", destination: "Водно – Крстовар преку Соње", destinationEn: null, meetingPoint: "Паркинг Средно Водно", price: null, difficulty: "лесна тура", difficultyEn: "easy route", detailsFrom: "caption", sourceUrl: "https://www.instagram.com/p/DcRSJhDCjUS/", postedAt: null },
+      { id: "d3", club: "psk_stratus", date: at(1), time: "04:30", destination: "Јакупица – Солунска Глава 2540 м", destinationEn: "Jakupica – Solunska Glava 2540 m", meetingPoint: "Железничка Станица Скопје – Пошта 2", price: "800 денари за превоз", difficulty: null, difficultyEn: null, detailsFrom: "image", sourceUrl: "https://www.instagram.com/p/DcSlvmoMpk6/", postedAt: null },
+      { id: "d4", club: "ilovehikingmacedonia", date: at(7), time: null, destination: "Пелистер – Големо и Мало Езеро", destinationEn: null, meetingPoint: "Железничка Станица Скопје – Пошта 2", price: "1500 ден по лице; влезницата за Националниот парк не е вклучена во цената", difficulty: "средно тешка тура", difficultyEn: "moderate route", detailsFrom: "caption", sourceUrl: "https://www.instagram.com/p/DcRSJhDCjUS/", postedAt: null },
+      { id: "DcSlvmoMpk6", club: "psk_stratus", date: at(13), time: "04:00", destination: "Дурмитор – Боботов Кук, Црно, Змиње и Барно Езеро", destinationEn: null, meetingPoint: "Железничка Станица Скопје – Пошта 2", price: "160 евра / 9.850 денари", difficulty: null, difficultyEn: null, detailsFrom: "caption", sourceUrl: "https://www.instagram.com/p/DcSlvmoMpk6/", postedAt: null },
+      { id: "d6", club: "pskh2o", date: at(20), time: "05:30", destination: "Шар Планина – Љуботен 2498 м", destinationEn: "Šar Mountain – Ljuboten 2498 m", meetingPoint: "Тетово, автобуска станица", price: "600 денари", difficulty: "тешка тура", difficultyEn: "difficult route", detailsFrom: "both", sourceUrl: "https://www.instagram.com/p/DcRSJhDCjUS/", postedAt: null }
+    ];
+  }
+
+  load() {
+    const src = this.props.dataSource || "live";
+    const now = new Date();
+    const gen = this.props.staleDemo ? new Date(now.getTime() - 76 * 3600e3) : new Date(now.getTime() - 4 * 60e3);
+    const wrap = (hikes) => ({ generatedAt: gen.toISOString(), servedAt: now.toISOString(), count: hikes.length, hikes });
+    if (src === "loading") return this.setState({ status: "loading", data: null });
+    if (src === "error") return this.setState({ status: "error", data: null });
+    if (src === "empty") return this.setState({ status: "ok", data: wrap([]) });
+    if (src === "dense") return this.setState({ status: "ok", data: wrap(this.denseHikes()) });
+    if (src === "live") {
+      this.setState({ status: "loading", data: null });
+      fetch(this.API_URL).then(r => r.json()).then(d => {
+        if (!d || !Array.isArray(d.hikes)) throw new Error("malformed");
+        this.setState({ status: "ok", data: d });
+      }).catch(() => this.setState({ status: "error", data: null }));
+      return;
+    }
+    this.setState({ status: "ok", data: wrap(this.sampleHikes()) });
+  }
+
+  club(key) {
+    const c = this.CLUBS[key] || { name: key, nameEn: key, light: "#5a5652", dark: "#c4bfb8" };
+    return { name: this.state.lang === "en" ? c.nameEn : c.name, color: this.isDark() ? c.dark : c.light };
+  }
+  dest(h) { return (this.state.lang === "en" && h.destinationEn) || h.destination; }
+  diff(h) { return (this.state.lang === "en" && h.difficultyEn) || h.difficulty; }
+
+  daysUntil(dateStr) { return Math.round((new Date(dateStr + "T00:00:00") - this.today()) / 864e5); }
+
+  relLabel(dateStr) {
+    const L = this.t();
+    const n = this.daysUntil(dateStr);
+    const dow = new Date(dateStr + "T00:00:00").getDay();
+    if (n === 0) return L.today;
+    if (n === 1) return L.tomorrow;
+    if (n < 0) return L.past;
+    const satIn = (6 - this.today().getDay() + 7) % 7;
+    if (n <= satIn + 1) return dow === 6 ? L.thisSat : dow === 0 ? L.thisSun : L.inDays(n);
+    if (n <= satIn + 8) return dow === 6 ? L.nextSat : dow === 0 ? L.nextSun : L.inDays(n);
+    return L.inDays(n);
+  }
+
+  fullDate(dateStr) {
+    const L = this.t();
+    const d = new Date(dateStr + "T00:00:00");
+    if (this.state.lang === "en") return L.dow[d.getDay()] + ", " + d.getDate() + " " + L.months[d.getMonth()] + " " + d.getFullYear();
+    return L.dow[d.getDay()] + ", " + d.getDate() + " " + L.months[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  hikes() {
+    const d = this.state.data;
+    if (!d || !Array.isArray(d.hikes)) return [];
+    return d.hikes.slice().sort((a, b) => (a.date + (a.time || "99:99")).localeCompare(b.date + (b.time || "99:99")));
+  }
+
+  open(id) {
+    const url = location.pathname + location.search + "#hike=" + id;
+    if (this.hashId()) history.replaceState(null, "", url);
+    else history.pushState(null, "", url);
+    this.setState({ selected: id, copied: false });
+  }
+  close() {
+    if (this.hashId()) {
+      if (history.length > 1) { history.back(); return; }
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+    this.setState({ selected: null, copied: false });
+  }
+  share() {
+    if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(() => this.setState({ copied: true })).catch(() => {});
+    else this.setState({ copied: true });
+  }
+
+  dragStart(e) {
+    const el = this._panel;
+    if (!el) return;
+    const startY = e.clientY;
+    el.style.transition = "none";
+    const move = (ev) => { el.style.transform = "translateY(" + Math.max(0, ev.clientY - startY) + "px)"; };
+    const up = (ev) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      if (Math.max(0, ev.clientY - startY) > 110) {
+        el.style.transition = "transform .2s ease";
+        el.style.transform = "translateY(110%)";
+        setTimeout(() => this.close(), 170);
+      } else {
+        el.style.transition = "transform .22s ease";
+        el.style.transform = "translateY(0)";
+      }
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+
+  setView(v) { try { localStorage.setItem("nextpeak-view", v); } catch (e) {} this.setState({ view: v }); }
+  setLang(v) { try { localStorage.setItem("nextpeak-lang", v); } catch (e) {} this.setState({ lang: v }); }
+  setTheme(v) { try { localStorage.setItem("nextpeak-theme", v); } catch (e) {} this.setState({ theme: v }); }
+
+  renderVals() {
+    const st = this.state;
+    const L = this.t();
+    const hikes = this.hikes();
+    const sel = hikes.find(h => h.id === st.selected) || null;
+    const detailOpen = !!sel;
+    const isMobile = st.mobile;
+    const status = st.status;
+    const muted = (p) => "color-mix(in srgb, var(--color-text) " + p + "%, transparent)";
+
+    const gen = st.data && st.data.generatedAt ? new Date(st.data.generatedAt) : null;
+    const stale = !!gen && (Date.now() - gen.getTime()) > 48 * 3600e3;
+    const sources = "ПСК Стратус, I Love Hiking Macedonia, ПСК Х2О";
+    const updated = gen
+      ? L.updated(gen.getDate() + "." + (gen.getMonth() + 1) + ".", String(gen.getHours()).padStart(2, "0") + ":" + String(gen.getMinutes()).padStart(2, "0")) + " · " + sources
+      : "";
+
+    const satIn = (6 - this.today().getDay() + 7) % 7;
+    const groupsMap = L.groups.map(label => ({ label, items: [] }));
+    const row = (h) => {
+      const c = this.club(h.club);
+      const rel = this.relLabel(h.date);
+      return {
+        id: h.id, color: c.color, destination: this.dest(h),
+        meta: rel + " · " + c.name,
+        time: h.time || "", open: () => this.open(h.id),
+        aria: rel + ", " + this.dest(h) + ", " + c.name + (h.time ? ", " + L.departure + " " + h.time : "")
+      };
+    };
+    hikes.forEach(h => {
+      const n = this.daysUntil(h.date);
+      if (n < 0) return;
+      if (n <= satIn + 1) groupsMap[0].items.push(row(h));
+      else if (n <= satIn + 8) groupsMap[1].items.push(row(h));
+      else groupsMap[2].items.push(row(h));
+    });
+    const groups = groupsMap.filter(g => g.items.length);
+
+    const byDate = {};
+    hikes.forEach(h => { (byDate[h.date] = byDate[h.date] || []).push(h); });
+
+    const next = hikes.filter(h => this.daysUntil(h.date) >= 0)[0] || hikes[0];
+    const base = next ? new Date(next.date + "T00:00:00") : this.today();
+    const view = new Date(base.getFullYear(), base.getMonth() + st.monthOffset, 1);
+    const first = (view.getDay() + 6) % 7;
+    const dim = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+    const todayIso = this.iso(this.today());
+
+    const cells = [];
+    for (let i = 0; i < first; i++) cells.push({ key: "b" + i, num: "", plain: false, hike: false, cellStyle: "min-width:0;min-height:48px" });
+    for (let day = 1; day <= dim; day++) {
+      const d = new Date(view.getFullYear(), view.getMonth(), day);
+      const ds = this.iso(d);
+      const dow = d.getDay();
+      const weekend = dow === 0 || dow === 6;
+      const isToday = ds === todayIso;
+      const list = byDate[ds] || [];
+      const colors = list.map(h => this.club(h.club).color);
+      let bg = colors[0];
+      if (colors.length === 2) bg = "linear-gradient(115deg, " + colors[0] + " 50%, " + colors[1] + " 50%)";
+      else if (colors.length > 2) bg = "linear-gradient(115deg, " + colors[0] + " 33%, " + colors[1] + " 33% 66%, " + colors[2] + " 66%)";
+      cells.push({
+        key: ds, num: String(day), plain: list.length === 0, hike: list.length > 0,
+        multi: list.length > 1, countLabel: L.tours(list.length),
+        markerStyle: "width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:13.5px;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.3);background:" + (bg || "transparent") + ";" + (isToday ? "box-shadow:0 0 0 2px var(--color-bg),0 0 0 3.5px var(--color-accent);" : ""),
+        aria: list.length ? day + " " + L.months[view.getMonth()] + ": " + list.map(h => this.dest(h) + " (" + this.club(h.club).name + ")").join("; ") : "",
+        open: list.length ? () => this.open(list[0].id) : null,
+        cellStyle: "min-width:0;overflow:hidden;min-height:48px;display:flex;align-items:center;justify-content:center;border-radius:9px;" + (weekend ? "background:" + muted(4) + ";" : ""),
+        numStyle: "font-size:12.5px;color:" + muted(isToday ? 82 : weekend ? 34 : 24) + ";" + (isToday ? "font-style:italic;" : "")
+      });
+    }
+
+    const monthHikes = hikes.filter(h => {
+      const d = new Date(h.date + "T00:00:00");
+      return d.getMonth() === view.getMonth() && d.getFullYear() === view.getFullYear();
+    }).map(h => {
+      const d = new Date(h.date + "T00:00:00");
+      const c = this.club(h.club);
+      return {
+        day: d.getDate() + " " + L.dow3[d.getDay()], destination: this.dest(h), color: c.color,
+        aria: this.fullDate(h.date) + ", " + this.dest(h) + ", " + c.name,
+        open: () => this.open(h.id)
+      };
+    });
+
+    const legend = Object.keys(this.CLUBS).map(k => ({ name: this.club(k).name, color: this.club(k).color }));
+
+    let detail = null;
+    if (sel) {
+      const c = this.club(sel.club);
+      const rows = [];
+      if (sel.time) rows.push({ label: L.departure, value: sel.time + L.timeSuffix });
+      if (sel.meetingPoint) rows.push({ label: L.meeting, value: sel.meetingPoint });
+      if (sel.price) rows.push({ label: L.price, value: sel.price });
+      if (this.diff(sel)) rows.push({ label: L.difficulty, value: this.diff(sel) });
+      rows.push({ label: L.organiser, value: c.name });
+      const siblings = (byDate[sel.date] || []).filter(h => h.id !== sel.id).map(h => ({
+        destination: this.dest(h), color: this.club(h.club).color, open: () => this.open(h.id)
+      }));
+      detail = {
+        color: c.color, club: c.name, when: this.relLabel(sel.date), destination: this.dest(sel),
+        fullDate: this.fullDate(sel.date), rows, sourceUrl: sel.sourceUrl,
+        siblings, hasSiblings: siblings.length > 0
+      };
+    }
+
+    const panelStyle = isMobile
+      ? "position:fixed;left:0;right:0;bottom:0;z-index:50;max-height:86vh;display:flex;flex-direction:column;background:var(--color-bg);border-top:1px solid var(--color-divider);border-radius:14px 14px 0 0;box-shadow:var(--shadow-lg);animation:sheetup .22s ease;"
+      : "position:fixed;top:0;right:0;bottom:0;width:392px;z-index:50;display:flex;flex-direction:column;background:var(--color-bg);border-left:1px solid var(--color-divider);overflow-y:auto;";
+
+    const themeGlyph = st.theme === "light" ? "☀" : st.theme === "dark" ? "☾" : "◐";
+
+    return {
+      t: L,
+      appName: L.app,
+      tagline: L.tagline,
+      pageStyle: "transition:padding .2s ease;" + (!isMobile && detailOpen ? "padding-right:392px;" : ""),
+      isLoading: status === "loading",
+      isError: status === "error",
+      isEmpty: status === "ok" && hikes.length === 0,
+      hasHikes: status === "ok" && hikes.length > 0,
+      isStale: stale,
+      updatedText: updated,
+      retry: () => this.load(),
+      listChecked: st.view === "list",
+      calChecked: st.view === "calendar",
+      pickList: () => this.setView("list"),
+      pickCal: () => this.setView("calendar"),
+      showList: st.view === "list",
+      showCal: st.view === "calendar",
+      menuOpen: st.menuOpen,
+      toggleMenu: () => this.setState(s => ({ menuOpen: !s.menuOpen })),
+      closeMenu: () => this.setState({ menuOpen: false }),
+      prefsLabel: (st.lang === "en" ? "EN" : "МК") + " " + themeGlyph,
+      langOptions: [
+        { label: "Македонски", checked: st.lang === "mk", pick: () => this.setLang("mk") },
+        { label: "English", checked: st.lang === "en", pick: () => this.setLang("en") }
+      ],
+      themeOptions: [
+        { label: L.themeSystem, checked: st.theme === "system", pick: () => this.setTheme("system") },
+        { label: L.themeLight, checked: st.theme === "light", pick: () => this.setTheme("light") },
+        { label: L.themeDark, checked: st.theme === "dark", pick: () => this.setTheme("dark") }
+      ],
+      groups,
+      weekdays: L.weekdays.map((label, i) => ({ label, style: i > 4 ? "color:" + muted(52) + ";" : "" })),
+      monthLabel: L.months[view.getMonth()].charAt(0).toUpperCase() + L.months[view.getMonth()].slice(1) + " " + view.getFullYear(),
+      noMonthText: L.noMonth(L.months[view.getMonth()]),
+      prevMonth: () => this.setState(s => ({ monthOffset: s.monthOffset - 1 })),
+      nextMonth: () => this.setState(s => ({ monthOffset: s.monthOffset + 1 })),
+      cells, legend, monthHikes,
+      hasMonthHikes: monthHikes.length > 0,
+      noMonthHikes: monthHikes.length === 0,
+      detail, isMobile,
+      showBackdrop: isMobile && detailOpen,
+      panelStyle,
+      panelRef: (el) => { this._panel = el; },
+      dragStart: (e) => this.dragStart(e),
+      close: () => this.close(),
+      share: () => this.share(),
+      shareLabel: st.copied ? L.copied : L.copy
+    };
+  }
+}
+</script>
+</body>
+</html>
