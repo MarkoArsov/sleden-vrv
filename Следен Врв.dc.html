@@ -33,26 +33,66 @@
   @keyframes skel { 0%, 100% { opacity: .3 } 50% { opacity: .13 } }
   @keyframes sheetup { from { transform: translateY(18px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
   @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
+  @media (max-width: 700px) {
+    .app-header {
+      align-items: stretch !important;
+      flex-direction: column !important;
+      gap: 18px !important;
+    }
+    .brand-block {
+      width: 100%;
+    }
+    .header-controls {
+      width: 100% !important;
+      margin-left: 0 !important;
+      flex: none !important;
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) max-content;
+      align-items: stretch !important;
+      justify-content: stretch !important;
+      gap: 8px !important;
+    }
+    .view-switch {
+      width: 100% !important;
+      min-width: 0;
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .view-switch .seg-opt {
+      min-width: 0;
+      min-height: 44px !important;
+      justify-content: center;
+      padding-inline: 10px;
+      text-align: center;
+    }
+    .prefs-toggle {
+      min-width: 64px !important;
+      min-height: 44px !important;
+      padding-inline: 12px !important;
+      border: 1px solid var(--color-divider);
+      border-radius: var(--radius-md);
+    }
+  }
 </style>
 </helmet>
 <div style="min-height: 100vh; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); font-variant-numeric: tabular-nums;">
   <div style="{{ pageStyle }}">
     <div style="max-width: 620px; margin: 0 auto; padding: 26px 20px 110px;">
 
-      <header style="display: flex; align-items: flex-end; gap: 16px 12px; flex-wrap: wrap;">
-        <div>
+      <header class="app-header" style="display: flex; align-items: flex-end; gap: 16px 12px; flex-wrap: wrap;">
+        <div class="brand-block">
           <svg viewBox="0 0 64 18" width="64" height="18" aria-hidden="true" style="display: block; overflow: visible;">
             <polyline points="0,17 12,4 19,11 30,1 41,12 50,7 64,17" fill="none" stroke="var(--color-accent)" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"></polyline>
           </svg>
           <h1 style="font-size: 30px; margin: 8px 0 2px; letter-spacing: -0.015em; font-weight: 400;">{{ appName }}</h1>
           <p style="margin: 0; font-size: 12.5px; font-style: italic; color: color-mix(in srgb, var(--color-text) 55%, transparent);">{{ tagline }}</p>
         </div>
-        <div style="margin-left: auto; flex: 1 1 220px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative;">
-          <div class="seg" role="group" aria-label="{{ t.view }}">
+        <div class="header-controls" style="margin-left: auto; flex: 1 1 220px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative;">
+          <div class="seg view-switch" role="group" aria-label="{{ t.view }}">
             <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" checked="{{ calChecked }}" onChange="{{ pickCal }}">{{ t.calendar }}</label>
             <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" checked="{{ listChecked }}" onChange="{{ pickList }}">{{ t.list }}</label>
           </div>
-          <button type="button" class="btn btn-ghost" onClick="{{ toggleMenu }}" aria-haspopup="menu" aria-expanded="{{ menuOpen }}" aria-label="{{ t.prefs }}" style="min-height: 40px; min-width: 44px; font-size: 12px; letter-spacing: 0.06em; color: color-mix(in srgb, var(--color-text) 55%, transparent);">{{ prefsLabel }}</button>
+          <button type="button" class="btn btn-ghost prefs-toggle" onClick="{{ toggleMenu }}" aria-haspopup="menu" aria-expanded="{{ menuOpen }}" aria-label="{{ t.prefs }}" style="min-height: 40px; min-width: 44px; font-size: 12px; letter-spacing: 0.06em; color: color-mix(in srgb, var(--color-text) 55%, transparent);">{{ prefsLabel }}</button>
           <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
             <div>
               <div onClick="{{ closeMenu }}" style="position: fixed; inset: 0; z-index: 30;"></div>
@@ -118,49 +158,62 @@
       <sc-if value="{{ hasHikes }}" hint-placeholder-val="{{ true }}">
         <div>
           <sc-if value="{{ showCal }}" hint-placeholder-val="{{ true }}">
-            <div style="padding-top: 34px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <h2 style="font-family: var(--font-heading); font-weight: 400; font-size: 27px; margin: 0; letter-spacing: -0.01em;">{{ monthLabel }}</h2>
-                <button type="button" class="btn btn-ghost" aria-label="{{ t.prevMonth }}" onClick="{{ prevMonth }}" style="width: 44px; height: 44px; margin-left: auto; font-size: 17px;">←</button>
-                <button type="button" class="btn btn-ghost" aria-label="{{ t.nextMonth }}" onClick="{{ nextMonth }}" style="width: 44px; height: 44px; font-size: 17px;">→</button>
-              </div>
-              <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-top: 20px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 34%, transparent); text-align: center;">
-                <sc-for list="{{ weekdays }}" as="w" hint-placeholder-count="7">
-                  <span style="{{ w.style }}">{{ w.label }}</span>
-                </sc-for>
-              </div>
-              <div role="grid" aria-label="{{ monthLabel }}" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-top: 8px;">
-                <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
-                  <div style="{{ c.cellStyle }}">
-                    <sc-if value="{{ c.hike }}" hint-placeholder-val="{{ false }}">
-                      <button type="button" onClick="{{ c.open }}" aria-label="{{ c.aria }}" style="width: 100%; min-width: 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: transparent; cursor: pointer; font: inherit; color: inherit; padding: 3px 0; border-radius: 8px; transition: transform .15s ease;" style-hover="transform: translateY(-2px);">
-                        <span style="{{ c.markerStyle }}">{{ c.num }}</span>
-                        <sc-if value="{{ c.multi }}" hint-placeholder-val="{{ false }}">
-                          <span style="font-size: 9px; letter-spacing: 0.06em; color: color-mix(in srgb, var(--color-text) 55%, transparent);">{{ c.countLabel }}</span>
-                        </sc-if>
+            <div style="{{ calSwipeStyle }}" onPointerDown="{{ monthSwipeStart }}">
+              <div style="{{ calTrackStyle }}">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <h2 style="font-family: var(--font-heading); font-weight: 400; font-size: 27px; margin: 0; letter-spacing: -0.01em;">{{ monthLabel }}</h2>
+                  <div style="margin-left: auto; display: flex; align-items: center; gap: 6px;">
+                    <sc-if value="{{ showJumpToday }}" hint-placeholder-val="{{ false }}">
+                      <button type="button" class="btn btn-ghost" aria-label="{{ t.jumpToday }}" onClick="{{ jumpToday }}" style="width: 40px; height: 44px; padding: 0; color: color-mix(in srgb, var(--color-text) 58%, transparent);">
+                        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" style="display:block;">
+                          <circle cx="12" cy="12" r="7.2" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+                          <circle cx="12" cy="12" r="2.2" fill="currentColor"></circle>
+                          <path d="M12 2.8v3.1M12 18.1v3.1M2.8 12h3.1M18.1 12h3.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                        </svg>
                       </button>
                     </sc-if>
-                    <sc-if value="{{ c.plain }}" hint-placeholder-val="{{ true }}">
-                      <span style="{{ c.numStyle }}">{{ c.num }}</span>
-                    </sc-if>
+                    <button type="button" class="btn btn-ghost" aria-label="{{ t.prevMonth }}" onClick="{{ prevMonth }}" style="width: 44px; height: 44px; font-size: 17px;">←</button>
+                    <button type="button" class="btn btn-ghost" aria-label="{{ t.nextMonth }}" onClick="{{ nextMonth }}" style="width: 44px; height: 44px; font-size: 17px;">→</button>
                   </div>
-                </sc-for>
-              </div>
-
-              <sc-if value="{{ hasMonthHikes }}" hint-placeholder-val="{{ true }}">
-                <div style="margin-top: 34px; display: flex; flex-direction: column; gap: 4px;">
-                  <sc-for list="{{ monthHikes }}" as="m" hint-placeholder-count="2">
-                    <button type="button" onClick="{{ m.open }}" aria-label="{{ m.aria }}" style="width: 100%; display: grid; grid-template-columns: 4px 74px 1fr; align-items: center; gap: 0 14px; text-align: left; background: transparent; border: 0; padding: 11px 8px; border-radius: 8px; min-height: 44px; cursor: pointer; font: inherit; color: inherit;" style-hover="background: color-mix(in srgb, var(--color-text) 6%, transparent);">
-                      <span aria-hidden="true" style="align-self: stretch; border-radius: 2px; background: {{ m.color }};"></span>
-                      <span style="font-size: 12.5px; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ m.day }}</span>
-                      <span style="font-family: var(--font-heading); font-weight: 600; font-size: 17px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">{{ m.destination }}</span>
-                    </button>
+                </div>
+                <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-top: 20px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 34%, transparent); text-align: center;">
+                  <sc-for list="{{ weekdays }}" as="w" hint-placeholder-count="7">
+                    <span style="{{ w.style }}">{{ w.label }}</span>
                   </sc-for>
                 </div>
-              </sc-if>
-              <sc-if value="{{ noMonthHikes }}" hint-placeholder-val="{{ false }}">
-                <p style="margin: 30px 0 0; font-size: 13.5px; font-style: italic; color: color-mix(in srgb, var(--color-text) 46%, transparent);">{{ noMonthText }}</p>
-              </sc-if>
+                <div role="grid" aria-label="{{ monthLabel }}" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-top: 8px;">
+                  <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
+                    <div style="{{ c.cellStyle }}">
+                      <sc-if value="{{ c.hike }}" hint-placeholder-val="{{ false }}">
+                        <button type="button" onClick="{{ c.open }}" aria-label="{{ c.aria }}" style="width: 100%; min-width: 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: transparent; cursor: pointer; font: inherit; color: inherit; padding: 3px 0; border-radius: 8px; transition: transform .15s ease;" style-hover="transform: translateY(-2px);">
+                          <span style="{{ c.markerStyle }}">{{ c.num }}</span>
+                          <sc-if value="{{ c.multi }}" hint-placeholder-val="{{ false }}">
+                            <span style="font-size: 9px; letter-spacing: 0.06em; color: color-mix(in srgb, var(--color-text) 55%, transparent);">{{ c.countLabel }}</span>
+                          </sc-if>
+                        </button>
+                      </sc-if>
+                      <sc-if value="{{ c.plain }}" hint-placeholder-val="{{ true }}">
+                        <span style="{{ c.numStyle }}">{{ c.num }}</span>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+
+                <sc-if value="{{ hasMonthHikes }}" hint-placeholder-val="{{ true }}">
+                  <div style="margin-top: 34px; display: flex; flex-direction: column; gap: 4px;">
+                    <sc-for list="{{ monthHikes }}" as="m" hint-placeholder-count="2">
+                      <button type="button" onClick="{{ m.open }}" aria-label="{{ m.aria }}" style="width: 100%; display: grid; grid-template-columns: 4px 74px 1fr; align-items: center; gap: 0 14px; text-align: left; background: transparent; border: 0; padding: 11px 8px; border-radius: 8px; min-height: 44px; cursor: pointer; font: inherit; color: inherit;" style-hover="background: color-mix(in srgb, var(--color-text) 6%, transparent);">
+                        <span aria-hidden="true" style="align-self: stretch; border-radius: 2px; background: {{ m.color }};"></span>
+                        <span style="font-size: 12.5px; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ m.day }}</span>
+                        <span style="font-family: var(--font-heading); font-weight: 600; font-size: 17px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">{{ m.destination }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ noMonthHikes }}" hint-placeholder-val="{{ false }}">
+                  <p style="margin: 30px 0 0; font-size: 13.5px; font-style: italic; color: color-mix(in srgb, var(--color-text) 46%, transparent);">{{ noMonthText }}</p>
+                </sc-if>
+              </div>
             </div>
           </sc-if>
 
@@ -269,7 +322,7 @@ class Component extends DCLogic {
       loading: "Се вчитува", stale: "Податоците се од пред повеќе од два дена — може да има нови објави.",
       errorTitle: "Податоците не се вчитаа", errorBody: "Врската со изворите не успеа. Ништо не е изгубено, пробајте повторно.", retry: "Пробај повторно",
       emptyTitle: "Викендот е слободен", emptyBody: "Ниту еден клуб не објавил тура за следните три недели. Обично објавуваат неделата пред тргнување.",
-      prevMonth: "Претходен месец", nextMonth: "Следен месец",
+      prevMonth: "Претходен месец", nextMonth: "Следен месец", jumpToday: "Скокни на денес",
       groups: ["Овој викенд", "Следната недела", "Подоцна"],
       weekdays: ["Пон","Вто","Сре","Чет","Пет","Саб","Нед"],
       months: ["јануари","февруари","март","април","мај","јуни","јули","август","септември","октомври","ноември","декември"],
@@ -293,7 +346,7 @@ class Component extends DCLogic {
       loading: "Loading", stale: "This schedule is more than two days old — there may be newer posts.",
       errorTitle: "Couldn’t load the schedule", errorBody: "The sources didn’t answer. Nothing is lost — give it another try.", retry: "Try again",
       emptyTitle: "The weekend is free", emptyBody: "None of the three clubs has posted a hike for the next three weeks. They usually post the week before departure.",
-      prevMonth: "Previous month", nextMonth: "Next month",
+      prevMonth: "Previous month", nextMonth: "Next month", jumpToday: "Jump to today",
       groups: ["This weekend", "Next week", "Later"],
       weekdays: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
       months: ["January","February","March","April","May","June","July","August","September","October","November","December"],
@@ -311,7 +364,7 @@ class Component extends DCLogic {
     }
   };
 
-  state = { status: "ok", data: null, view: "calendar", selected: null, mobile: false, systemDark: false, theme: "system", lang: "mk", copied: false, monthOffset: 0, menuOpen: false };
+  state = { status: "ok", data: null, view: "calendar", selected: null, mobile: false, systemDark: false, theme: "system", lang: "mk", copied: false, monthOffset: 0, monthDrag: 0, monthDragging: false, monthAnimating: false, menuOpen: false };
 
   componentDidMount() {
     const mq = window.matchMedia("(max-width: 860px)");
@@ -339,6 +392,9 @@ class Component extends DCLogic {
     window.removeEventListener("hashchange", this._onNav);
     window.removeEventListener("popstate", this._onNav);
     window.removeEventListener("keydown", this._onKey);
+    this.endMonthSwipeListeners();
+    clearTimeout(this._monthExitTimer);
+    clearTimeout(this._monthEnterTimer);
   }
   componentDidUpdate(prev) {
     if (prev.dataSource !== this.props.dataSource) this.load();
@@ -445,6 +501,7 @@ class Component extends DCLogic {
   }
 
   open(id) {
+    if (this._suppressOpenUntil && Date.now() < this._suppressOpenUntil) return;
     const url = location.pathname + location.search + "#hike=" + id;
     if (this.hashId()) history.replaceState(null, "", url);
     else history.pushState(null, "", url);
@@ -482,6 +539,98 @@ class Component extends DCLogic {
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
+  }
+
+  endMonthSwipeListeners() {
+    if (this._monthSwipeMove) window.removeEventListener("pointermove", this._monthSwipeMove);
+    if (this._monthSwipeUp) window.removeEventListener("pointerup", this._monthSwipeUp);
+    if (this._monthSwipeCancel) window.removeEventListener("pointercancel", this._monthSwipeCancel);
+    this._monthSwipeMove = null;
+    this._monthSwipeUp = null;
+    this._monthSwipeCancel = null;
+    if (this._monthSwipeFrame) cancelAnimationFrame(this._monthSwipeFrame);
+    this._monthSwipeFrame = null;
+  }
+
+  setMonthDrag(x, dragging) {
+    this._monthSwipeDrag = x;
+    this._monthSwipeDragging = dragging;
+    if (this._monthSwipeFrame) return;
+    this._monthSwipeFrame = requestAnimationFrame(() => {
+      this._monthSwipeFrame = null;
+      this.setState({ monthDrag: this._monthSwipeDrag || 0, monthDragging: !!this._monthSwipeDragging });
+    });
+  }
+
+  monthSwipeStart(e) {
+    if (!this.state.mobile || this.state.view !== "calendar" || this.state.selected || this.state.monthAnimating) return;
+    if (e.button && e.button !== 0) return;
+    const target = e.currentTarget;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startedAt = Date.now();
+    const width = Math.max(280, target.getBoundingClientRect().width || window.innerWidth || 360);
+    const limit = Math.min(96, width * 0.26);
+    const threshold = Math.min(86, Math.max(48, width * 0.16));
+    let swiping = false;
+    let lastDx = 0;
+
+    this.endMonthSwipeListeners();
+    this._monthSwipeMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!swiping) {
+        if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) {
+          this.endMonthSwipeListeners();
+          this.setMonthDrag(0, false);
+          return;
+        }
+        if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
+        swiping = true;
+        try { target.setPointerCapture && target.setPointerCapture(e.pointerId); } catch (err) {}
+      }
+      lastDx = dx;
+      if (ev.cancelable) ev.preventDefault();
+      const eased = Math.sign(dx) * Math.min(limit, Math.abs(dx) * 0.72);
+      this.setMonthDrag(eased, true);
+    };
+    this._monthSwipeUp = () => {
+      this.endMonthSwipeListeners();
+      const fast = Math.abs(lastDx) > 34 && Date.now() - startedAt < 260;
+      const shouldTurn = Math.abs(lastDx) > threshold || fast;
+      if (shouldTurn) {
+        const dir = lastDx < 0 ? 1 : -1;
+        this._suppressOpenUntil = Date.now() + 650;
+        clearTimeout(this._monthExitTimer);
+        clearTimeout(this._monthEnterTimer);
+        this.setState({ monthDrag: -dir * width, monthDragging: false, monthAnimating: true }, () => {
+          this._monthExitTimer = setTimeout(() => {
+            this.setState(s => ({
+              monthOffset: s.monthOffset + dir,
+              monthDrag: dir * width,
+              monthDragging: true
+            }), () => {
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  this.setState({ monthDrag: 0, monthDragging: false }, () => {
+                    this._monthEnterTimer = setTimeout(() => this.setState({ monthAnimating: false }), 260);
+                  });
+                });
+              });
+            });
+          }, 230);
+        });
+      } else {
+        this.setState({ monthDrag: 0, monthDragging: false, monthAnimating: false });
+      }
+    };
+    this._monthSwipeCancel = () => {
+      this.endMonthSwipeListeners();
+      this.setState({ monthDrag: 0, monthDragging: false, monthAnimating: false });
+    };
+    window.addEventListener("pointermove", this._monthSwipeMove, { passive: false });
+    window.addEventListener("pointerup", this._monthSwipeUp);
+    window.addEventListener("pointercancel", this._monthSwipeCancel);
   }
 
   setView(v) { try { localStorage.setItem("nextpeak-view", v); } catch (e) {} this.setState({ view: v }); }
@@ -534,7 +683,10 @@ class Component extends DCLogic {
     const view = new Date(base.getFullYear(), base.getMonth() + st.monthOffset, 1);
     const first = (view.getDay() + 6) % 7;
     const dim = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
-    const todayIso = this.iso(this.today());
+    const todayDate = this.today();
+    const todayIso = this.iso(todayDate);
+    const todayMonthOffset = (todayDate.getFullYear() - base.getFullYear()) * 12 + todayDate.getMonth() - base.getMonth();
+    const isTodayMonth = view.getFullYear() === todayDate.getFullYear() && view.getMonth() === todayDate.getMonth();
 
     const cells = [];
     for (let i = 0; i < first; i++) cells.push({ key: "b" + i, num: "", plain: false, hike: false, cellStyle: "min-width:0;min-height:48px" });
@@ -611,6 +763,16 @@ class Component extends DCLogic {
       hasHikes: status === "ok" && hikes.length > 0,
       isStale: stale,
       updatedText: updated,
+      calSwipeStyle: "padding-top:34px;overflow:hidden;touch-action:pan-y;",
+      calTrackStyle: "transform:translateX(" + (st.monthDrag || 0).toFixed(1) + "px);transition:" + (st.monthDragging ? "none" : "transform .22s cubic-bezier(.2,.8,.2,1)") + ";will-change:transform;",
+      monthSwipeStart: (e) => this.monthSwipeStart(e),
+      showJumpToday: !isTodayMonth,
+      jumpToday: () => {
+        clearTimeout(this._monthExitTimer);
+        clearTimeout(this._monthEnterTimer);
+        this.endMonthSwipeListeners();
+        this.setState({ monthOffset: todayMonthOffset, monthDrag: 0, monthDragging: false, monthAnimating: false });
+      },
       retry: () => this.load(),
       listChecked: st.view === "list",
       calChecked: st.view === "calendar",
