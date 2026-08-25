@@ -1,6 +1,6 @@
-# Classical design system
+# Modern Alpine design system
 
-Classical is an editorial, book-like system on a soft near-white ground: Cormorant Garamond headings over Lora body, justified columns, hairline rules, and color applied as stroke rather than fill. Surfaces stay quiet — cards are bordered, buttons are outlined — and photographs sit matted on the page like tipped-in plates.
+Modern Alpine is a quiet, 2026-leaning hiking interface on a soft warm ground: Manrope for both headings and body, bold compact headings, clear metadata, hairline rules, and color applied as restrained gold accents. Surfaces stay light and functional, with restrained borders, crisp controls, and enough weight for Cyrillic text to read cleanly on mobile.
 
 ## How to use this
 
@@ -11,15 +11,15 @@ Classical is an editorial, book-like system on a soft near-white ground: Cormora
 
 ## Direction
 
-Editorial, justified body copy in columns. Tight leading; headlines flush-left over justified text blocks. Use hairline dividers (`var(--color-divider)`) between major sections. Apply color as borders, rules and underlines — not as filled blocks. Buttons are outlined (1px accent border on transparent), not solid-filled. Wrap hero and inline images in the `.plate` class — a warm archival grade inside a thin surface-colored mat, like a tipped-in book plate. In decks, section dividers sit on a deep warm near-black (a shade below `--color-neutral-900`) as a colophon page — paper type with a gold ghost numeral; gold stays stroke and small marks on content slides.
+Functional, outdoorsy, and modern, while keeping the original warm color mood. Keep layouts scan-friendly, use hairline dividers (`var(--color-divider)`) between major sections, and let bold headings establish hierarchy. Apply color as borders, rules, markers, and small UI accents rather than large decorative fills. Buttons are outlined or ghosted, with compact geometry and clear hover states.
 
 ## Color
 
-A light ground (`--color-bg` #f3f2f2) with `--color-text` #201f1d and a single accent #b68235 (this is a mono scheme: no second accent was chosen — the `--color-accent-2-*` variables carry a machine-derived stand-in kept only so both sets resolve; treat them as one role). Each role carries a 100–900 tonal ramp (`--color-neutral-100` … `--color-accent-2-900`) generated in OKLCH on a shared perceptual lightness scale, so the same step of any ramp has the same visual weight. Use the light steps (100–300) for tinted fills, hovers and subtle borders, 500 as the role's base, and the dark steps (700–900) for text on tinted fills and for pressed states; prefer ramp steps over ad-hoc `color-mix()`. For elevation use `--shadow-sm/md/lg` (already tuned to the ground) rather than ad-hoc box-shadows.
+A light ground (`--color-bg` #f3f2f2) with `--color-text` #201f1d, a gold accent #b68235, and a secondary warm accent #ac803e. Each role carries a 100-900 tonal ramp (`--color-neutral-100` ... `--color-accent-2-900`) so tint, border, and pressed states stay consistent. Use light steps (100-300) for tints and hovers, 500/600 for the base accent, and dark steps (700-900) for readable text on tinted fills.
 
 ## Type
 
-Cormorant Garamond for headings over Lora for body text, loaded as `--font-heading` / `--font-body`. Bold is avoided: interface headings cap at semibold (the `--font-heading-weight` token), and the bigger the text the lighter it sets — display sizes take the normal cut (the deck shows this). Numbers set tabular wherever they stand as figures or columns — kickers, contents numbers, tables, charts, the display numerals (`"tnum"`; both faces keep their own figure style and gain equal widths) — while running prose keeps its text figures (Lora's tabular feature also widens its word-spaces and punctuation, which would loosen the prose). Density 1.15× and radius 4px are already baked into the `--space-*` / `--radius-*` scales — use the variables, not raw numbers.
+Manrope is used for both headings and body text, loaded as `--font-heading` / `--font-body`. Headings use the bold token (`--font-heading-weight`) and body copy defaults to a medium-weight cut for readability. Avoid decorative italics for interface text; use weight, size, and muted color to create hierarchy. Numbers set tabular wherever they stand as figures or columns. Density 1.15x and the radius scale are baked into the `--space-*` / `--radius-*` tokens.
 
 ## Icons
 
@@ -47,17 +47,17 @@ States are built in: hovers and pressed states come from the accent ramp, keyboa
 
 ## Do
 
-- Justify body copy at a comfortable measure and let the hairlines carry the structure.
-- Draw with borders, rules and underlines; keep large fills off the page.
-- Give text room — the spacing scale is airy (density 1.15×) by design.
-- Mat photographs with the `.plate` wrapper so they read as plates, not banners.
+- Keep text scan-friendly and direct.
+- Use bold headings and medium supporting copy.
+- Draw with borders, rules, markers and underlines; keep large fills off the page.
+- Give controls stable dimensions and enough touch target space.
 
 ## Don't
 
-- Do not fill cards or buttons with solid accent color.
-- Do not use heavy drop shadows — elevation here is a whisper.
-- Do not tighten the leading or crowd the margins.
-- Do not swap in a sans-serif for emphasis; weight and italics do that job.
+- Do not bring back serif display faces for interface hierarchy.
+- Do not rely on italics for metadata.
+- Do not use heavy drop shadows.
+- Do not crowd Macedonian/Cyrillic labels; keep line-height comfortable.
 
 ## Files
 

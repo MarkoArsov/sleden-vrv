@@ -27,8 +27,8 @@
         "message": "Raw px value — use a design-system spacing token via var()."
       },
       {
-        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Cormorant Garamond|Lora))/i]",
-        "message": "Font not provided by the design system. Available: Cormorant Garamond, Lora."
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Manrope|Inter|ui-sans-serif|system-ui))/i]",
+        "message": "Font not provided by the design system. Available: Manrope."
       }
     ]
   },
@@ -145,8 +145,7 @@
       "--shadow-lg": "shadow"
     },
     "fontFamilies": [
-      "Cormorant Garamond",
-      "Lora"
+      "Manrope"
     ]
   }
 }
