@@ -72,13 +72,18 @@
       padding: 10px 20px 12px;
       width: calc(100% + 40px) !important;
       background: var(--color-bg);
-      border-bottom: 1px solid transparent;
+      border-bottom: 0;
       box-shadow: none;
-      transition: border-color .16s ease, box-shadow .16s ease;
     }
-    .header-controls.is-stuck {
-      border-bottom-color: var(--color-divider);
-      box-shadow: 0 5px 12px color-mix(in srgb, #16130f 16%, transparent);
+    .sticky-header-surface {
+      position: fixed;
+      inset: 0 0 auto;
+      height: calc(env(safe-area-inset-top) + 66px);
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-divider);
+      box-shadow: 0 8px 19px color-mix(in srgb, #16130f 23%, transparent);
+      z-index: 19;
+      pointer-events: none;
     }
     .view-switch {
       width: 100% !important;
@@ -157,6 +162,10 @@
           </sc-if>
         </div>
       </header>
+
+      <sc-if value="{{ headerPinned }}" hint-placeholder-val="{{ false }}">
+        <div class="sticky-header-surface" aria-hidden="true"></div>
+      </sc-if>
 
       <sc-if value="{{ isStale }}" hint-placeholder-val="{{ false }}">
         <p style="margin: 20px 0 0; font-size: 12.5px; font-weight: 650; line-height: 1.55; color: color-mix(in srgb, var(--color-text) 62%, transparent); border-left: 2px solid var(--color-accent); padding-left: 10px;">{{ t.stale }}</p>
@@ -494,7 +503,9 @@ class Component extends DCLogic {
   }
 
   syncHeaderPinned() {
-    const pinned = !!(this._stickyMq && this._stickyMq.matches && this._headerControls && this._headerControls.getBoundingClientRect().top <= 0.5);
+    const control = this._headerControls;
+    const stickyTop = control ? parseFloat(window.getComputedStyle(control).top) || 0 : 0;
+    const pinned = !!(this._stickyMq && this._stickyMq.matches && control && control.getBoundingClientRect().top <= stickyTop + 0.5);
     if (pinned !== this.state.headerPinned) this.setState({ headerPinned: pinned });
   }
 
@@ -1037,6 +1048,7 @@ class Component extends DCLogic {
       prefsLabel: (st.lang === "en" ? "EN" : "МК") + " " + themeGlyph,
       headerControlsClass: "header-controls" + (st.headerPinned ? " is-stuck" : ""),
       headerControlsRef: (el) => { this._headerControls = el; },
+      headerPinned: st.headerPinned,
       langOptions: [
         { label: "Македонски", checked: st.lang === "mk", pick: () => this.setLang("mk") },
         { label: "English", checked: st.lang === "en", pick: () => this.setLang("en") }
