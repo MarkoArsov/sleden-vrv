@@ -24,3 +24,9 @@ This is a static site. Deploy the repository root as-is.
 - `index.html` is the production entrypoint.
 - `.nojekyll` is required for GitHub Pages so the `_ds/` asset directory is served.
 - No build step is required.
+
+## PWA / iPhone
+
+The deployed site is installable as a standalone web app. It includes an iPhone Home Screen icon, safe-area handling for the Dynamic Island and Home Indicator, a portrait-first manifest, and an offline app shell with the last successfully fetched schedule available when the network is unavailable.
+
+Service workers require HTTPS (or `localhost` during development), so opening `index.html` with a `file://` URL intentionally does not activate offline support or installation. On iPhone, open the deployed HTTPS site in Safari and use **Share → Add to Home Screen**.

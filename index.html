@@ -1,10 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="mk">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#26231f" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Следен Врв">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="manifest" href="./manifest.webmanifest">
 <script src="./support.js"></script>
+<script src="./pwa.js" defer></script>
 </head>
 <body>
 <x-dc>
@@ -12,8 +22,8 @@
 <link rel="stylesheet" href="_ds/classical-668ace92-beca-41c2-b77b-3915a45aeb50/styles.css">
 <script src="_ds/classical-668ace92-beca-41c2-b77b-3915a45aeb50/_ds_bundle.js"></script>
 <style>
-  html, body { margin: 0; padding: 0; }
-  body { -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; padding: 0; background: var(--color-bg, #f7f3ec); }
+  body { -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
   :root[data-theme="dark"] {
     --color-bg: #26231f;
     --color-surface: #302c27;
@@ -37,12 +47,14 @@
   @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
   @media (max-width: 700px) {
     .app-header {
+      display: contents !important;
       align-items: stretch !important;
       flex-direction: column !important;
       gap: 18px !important;
     }
     .brand-block {
       width: 100%;
+      margin-bottom: 18px;
     }
     .header-controls {
       width: 100% !important;
@@ -53,6 +65,20 @@
       align-items: stretch !important;
       justify-content: stretch !important;
       gap: 8px !important;
+      position: sticky !important;
+      top: env(safe-area-inset-top);
+      z-index: 20;
+      margin-inline: -20px !important;
+      padding: 10px 20px 12px;
+      width: calc(100% + 40px) !important;
+      background: var(--color-bg);
+      border-bottom: 1px solid transparent;
+      box-shadow: none;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+    .header-controls.is-stuck {
+      border-bottom-color: var(--color-divider);
+      box-shadow: 0 5px 12px color-mix(in srgb, #16130f 16%, transparent);
     }
     .view-switch {
       width: 100% !important;
@@ -74,12 +100,26 @@
       border: 1px solid var(--color-divider);
       border-radius: var(--radius-md);
     }
+    .detail-panel-body {
+      padding-top: max(18px, env(safe-area-inset-top)) !important;
+      padding-bottom: max(40px, calc(env(safe-area-inset-bottom) + 24px)) !important;
+    }
   }
+  @media (display-mode: standalone) {
+    html { background: var(--color-bg); }
+  }
+  .view-switch:has(input:checked) { border-color: var(--color-accent); }
+  .view-switch .seg-opt:has(input:checked) {
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    box-shadow: none;
+  }
+  .view-switch .seg-opt:has(input:checked) + .seg-opt,
+  .view-switch .seg-opt + .seg-opt:has(input:checked) { border-left-color: var(--color-accent); }
 </style>
 </helmet>
 <div style="min-height: 100vh; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); font-variant-numeric: tabular-nums;">
   <div style="{{ pageStyle }}">
-    <div style="max-width: 620px; margin: 0 auto; padding: 26px 20px 110px;">
+    <div style="max-width: 620px; margin: 0 auto; padding: max(26px, env(safe-area-inset-top)) 20px max(110px, calc(90px + env(safe-area-inset-bottom)));">
 
       <header class="app-header" style="display: flex; align-items: flex-end; gap: 16px 12px; flex-wrap: wrap;">
         <div class="brand-block">
@@ -89,7 +129,7 @@
           <h1 style="font-size: 31px; margin: 9px 0 3px; letter-spacing: 0; font-weight: 800; line-height: 1.02;">{{ appName }}</h1>
           <p style="margin: 0; font-size: 12.5px; font-weight: 650; line-height: 1.45; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ tagline }}</p>
         </div>
-        <div class="header-controls" style="margin-left: auto; flex: 1 1 220px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative;">
+        <div class="{{ headerControlsClass }}" ref="{{ headerControlsRef }}" style="margin-left: auto; flex: 1 1 220px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative;">
           <div class="seg view-switch" role="group" aria-label="{{ t.view }}">
             <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" checked="{{ calChecked }}" onChange="{{ pickCal }}">{{ t.calendar }}</label>
             <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" checked="{{ listChecked }}" onChange="{{ pickList }}">{{ t.list }}</label>
@@ -227,15 +267,25 @@
               <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
                 <section style="padding-top: 34px;">
                   <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 800; letter-spacing: 0; color: color-mix(in srgb, var(--color-text) 56%, transparent); margin: 0 0 8px;">{{ g.label }}</h3>
-                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <div style="display: flex; flex-direction: column; gap: 18px;">
                     <sc-for list="{{ g.items }}" as="h" hint-placeholder-count="2">
-                      <button type="button" onClick="{{ h.open }}" aria-label="{{ h.aria }}" style="width: 100%; display: grid; grid-template-columns: 4px 1fr auto; align-items: start; gap: 0 15px; text-align: left; background: transparent; border: 0; padding: 14px 8px; border-radius: 8px; cursor: pointer; font: inherit; color: inherit; min-height: 44px;" style-hover="background: color-mix(in srgb, var(--color-text) 6%, transparent);">
-                        <span aria-hidden="true" style="align-self: stretch; min-height: 40px; border-radius: 2px; background: {{ h.color }};"></span>
-                        <span>
-                          <span style="display: block; font-family: var(--font-heading); font-weight: 800; font-size: 21px; line-height: 1.2; letter-spacing: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ h.destination }}</span>
-                          <span style="display: block; margin-top: 5px; font-size: 12.5px; font-weight: 650; color: color-mix(in srgb, var(--color-text) 60%, transparent);">{{ h.meta }}</span>
+                      <button type="button" onClick="{{ h.open }}" aria-label="{{ h.aria }}" style="width: 100%; overflow: hidden; text-align: left; background: var(--color-surface); border: 1px solid var(--color-divider); padding: 0; border-radius: 12px; cursor: pointer; font: inherit; color: inherit;" style-hover="border-color: color-mix(in srgb, var(--color-text) 32%, transparent);">
+                        <span style="display: flex; align-items: center; gap: 8px; padding: 13px 15px 0;">
+                          <span aria-hidden="true" style="width: 9px; height: 9px; border-radius: 50%; background: {{ h.color }};"></span>
+                          <span style="font-size: 12px; font-weight: 800; color: color-mix(in srgb, var(--color-text) 65%, transparent);">{{ h.club }}</span>
                         </span>
-                        <span style="font-size: 13px; color: color-mix(in srgb, var(--color-text) 58%, transparent); padding-top: 3px;">{{ h.time }}</span>
+                        <sc-if value="{{ h.hasImage }}" hint-placeholder-val="{{ false }}">
+                          <figure style="margin: 12px 0 0; background: color-mix(in srgb, var(--color-text) 5%, transparent);">
+                            <img sc-camel-on-load="{{ h.imageLoad }}" sc-camel-on-error="{{ h.imageError }}" sc-camel-src="{{ h.imageUrl }}" alt="{{ h.imageAlt }}" style="{{ h.imageStyle }}">
+                          </figure>
+                        </sc-if>
+                        <span style="display: block; padding: 14px 15px 16px;">
+                          <span style="display: block; font-family: var(--font-heading); font-weight: 800; font-size: 20px; line-height: 1.2; letter-spacing: 0; text-wrap: pretty;">{{ h.destination }}</span>
+                          <span style="display: block; margin-top: 5px; font-size: 12.5px; font-weight: 650; color: color-mix(in srgb, var(--color-text) 60%, transparent);">{{ h.meta }}</span>
+                          <sc-if value="{{ h.hasCaption }}" hint-placeholder-val="{{ false }}">
+                            <span style="{{ h.captionStyle }}">{{ h.caption }}</span>
+                          </sc-if>
+                        </span>
                       </button>
                     </sc-for>
                   </div>
@@ -264,12 +314,7 @@
 
   <sc-if value="{{ detail }}" hint-placeholder-val="{{ false }}">
     <aside role="dialog" aria-modal="{{ isMobile }}" aria-label="{{ t.detailLabel }}" ref="{{ panelRef }}" style="{{ panelStyle }}">
-      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
-        <div onPointerDown="{{ dragStart }}" style="padding: 11px 0 4px; cursor: grab; touch-action: none; display: flex; justify-content: center; flex: none;">
-          <span style="width: 42px; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--color-text) 26%, transparent);"></span>
-        </div>
-      </sc-if>
-      <div ref="{{ panelBodyRef }}" onPointerDown="{{ panelContentDragStart }}" style="padding: 18px 22px 40px; overflow-y: auto; flex: 1 1 auto; overscroll-behavior: contain; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y;">
+      <div class="detail-panel-body" ref="{{ panelBodyRef }}" style="padding: 18px 22px 40px; overflow-y: auto; flex: 1 1 auto; overscroll-behavior: contain; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y;">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; background: {{ detail.color }};"></span>
           <span style="font-size: 11.5px; color: color-mix(in srgb, var(--color-text) 62%, transparent);">{{ detail.club }}</span>
@@ -313,7 +358,7 @@
           </div>
         </sc-if>
         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px;">
-          <a class="btn btn-primary" href="{{ detail.sourceUrl }}" target="_blank" rel="noopener" style="min-height: 44px;">{{ t.openPost }}</a>
+          <a class="btn btn-primary" href="{{ detail.sourceUrl }}" rel="noopener external" style="min-height: 44px;">{{ t.openPost }}</a>
           <button type="button" class="btn btn-secondary" onClick="{{ share }}" style="min-height: 44px;">{{ shareLabel }}</button>
         </div>
       </div>
@@ -353,7 +398,7 @@ class Component extends DCLogic {
       noMonth: (m) => "Ниедна тура во " + m + " — пробајте следниот месец.",
       updated: (d, t) => "Освежено " + d + " во " + t,
       departure: "Тргнување", timeSuffix: " часот", meeting: "Собирно место", price: "Цена", difficulty: "Тежина", organiser: "Организатор",
-      sameDay: "Истиот ден", openPost: "Отвори објава", copy: "Копирај линк", copied: "Копирано",
+      sameDay: "Истиот ден", openPost: "Отвори објава", share: "Сподели", copied: "Копирано",
       close: "Затвори", detailLabel: "Детали за турата", imageAlt: "Фотографија од турата",
       readMore: "Прочитај повеќе", readLess: "Прикажи помалку"
     },
@@ -378,19 +423,21 @@ class Component extends DCLogic {
       noMonth: (m) => "No hikes in " + m + " — try the next month.",
       updated: (d, t) => "Updated " + d + " at " + t,
       departure: "Departure", timeSuffix: "", meeting: "Meeting point", price: "Price", difficulty: "Difficulty", organiser: "Organiser",
-      sameDay: "Same day", openPost: "Open the post", copy: "Copy link", copied: "Copied",
+      sameDay: "Same day", openPost: "Open the post", share: "Share", copied: "Copied",
       close: "Close", detailLabel: "Hike details", imageAlt: "Hike photo",
       readMore: "Read more", readLess: "Show less"
     }
   };
 
-  state = { status: "ok", data: null, view: "calendar", selected: null, mobile: false, systemDark: false, theme: "system", lang: "mk", copied: false, failedImageKey: null, loadedImageKey: null, captionExpanded: false, monthOffset: 0, monthDrag: 0, monthDragging: false, monthAnimating: false, menuOpen: false };
+  state = { status: "ok", data: null, view: "calendar", selected: null, mobile: false, systemDark: false, theme: "system", lang: "mk", copied: false, failedImageKey: null, loadedImageKey: null, failedFeedImageKeys: {}, loadedFeedImageKeys: {}, captionExpanded: false, headerPinned: false, monthOffset: 0, monthDrag: 0, monthDragging: false, monthAnimating: false, menuOpen: false };
 
   componentDidMount() {
     const mq = window.matchMedia("(max-width: 860px)");
+    this._stickyMq = window.matchMedia("(max-width: 700px)");
     const dk = window.matchMedia("(prefers-color-scheme: dark)");
-    this._sync = () => this.setState({ mobile: mq.matches, systemDark: dk.matches });
+    this._sync = () => this.setState({ mobile: mq.matches, systemDark: dk.matches }, () => this.syncHeaderPinned());
     mq.addEventListener("change", this._sync);
+    this._stickyMq.addEventListener("change", this._sync);
     dk.addEventListener("change", this._sync);
     let view = "calendar", theme = "system", lang = "mk";
     try {
@@ -405,9 +452,12 @@ class Component extends DCLogic {
     window.addEventListener("popstate", this._onNav);
     this._onKey = (e) => { if (e.key === "Escape") { if (this.state.menuOpen) this.setState({ menuOpen: false }); else if (this.state.selected) this.close(); } };
     window.addEventListener("keydown", this._onKey);
+    this._onScroll = () => this.syncHeaderPinned();
+    window.addEventListener("scroll", this._onScroll, { passive: true });
     this.setState({ mobile: mq.matches, systemDark: dk.matches, view: this.props.defaultView || view, theme, lang, selected: this.hashId() }, () => {
       this.applyEnv();
       this.syncPageScrollLock();
+      this.syncHeaderPinned();
     });
     this.load();
   }
@@ -415,6 +465,8 @@ class Component extends DCLogic {
     window.removeEventListener("hashchange", this._onNav);
     window.removeEventListener("popstate", this._onNav);
     window.removeEventListener("keydown", this._onKey);
+    window.removeEventListener("scroll", this._onScroll);
+    this._stickyMq.removeEventListener("change", this._sync);
     this.endPanelDragListeners();
     this.clearPanelDragFrame();
     this.endMonthSwipeListeners();
@@ -426,6 +478,7 @@ class Component extends DCLogic {
     if (prev.dataSource !== this.props.dataSource) this.load();
     this.applyEnv();
     this.syncPageScrollLock();
+    this.syncHeaderPinned();
   }
 
   applyEnv() {
@@ -438,6 +491,11 @@ class Component extends DCLogic {
       u.searchParams.set("lang", this.state.lang);
       history.replaceState(null, "", u.pathname + u.search + u.hash);
     }
+  }
+
+  syncHeaderPinned() {
+    const pinned = !!(this._stickyMq && this._stickyMq.matches && this._headerControls && this._headerControls.getBoundingClientRect().top <= 0.5);
+    if (pinned !== this.state.headerPinned) this.setState({ headerPinned: pinned });
   }
 
   t() { return this.L[this.state.lang] || this.L.mk; }
@@ -473,6 +531,7 @@ class Component extends DCLogic {
   }
 
   load() {
+    this.setState({ failedFeedImageKeys: {}, loadedFeedImageKeys: {} });
     const src = this.props.dataSource || "live";
     const now = new Date();
     const gen = this.props.staleDemo ? new Date(now.getTime() - 76 * 3600e3) : new Date(now.getTime() - 4 * 60e3);
@@ -547,6 +606,10 @@ class Component extends DCLogic {
     this.setState({ selected: null, copied: false, failedImageKey: null, loadedImageKey: null, captionExpanded: false });
   }
   share() {
+    if (navigator.share) {
+      navigator.share({ title: this.t().app, url: location.href }).catch(() => {});
+      return;
+    }
     if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(() => this.setState({ copied: true })).catch(() => {});
     else this.setState({ copied: true });
   }
@@ -827,10 +890,19 @@ class Component extends DCLogic {
     const row = (h) => {
       const c = this.club(h.club);
       const rel = this.relLabel(h.date);
+      const caption = this.caption(h);
+      const imageUrl = typeof h.imageUrl === "string" && h.imageUrl.trim() ? h.imageUrl : null;
+      const imageKey = imageUrl ? h.id + ":" + imageUrl : null;
       return {
-        id: h.id, color: c.color, destination: this.dest(h),
-        meta: rel + " · " + c.name,
-        time: h.time || "", open: () => this.open(h.id),
+        id: h.id, club: c.name, color: c.color, destination: this.dest(h),
+        meta: rel + (h.time ? " · " + h.time + L.timeSuffix : ""),
+        caption, hasCaption: !!caption.trim(),
+        captionStyle: "display:-webkit-box;margin-top:12px;font-size:14px;line-height:1.65;white-space:pre-wrap;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:" + muted(70) + ";",
+        imageUrl, hasImage: !!imageUrl && !st.failedFeedImageKeys[imageKey], imageAlt: L.imageAlt,
+        imageStyle: "display:block;width:100%;height:auto;max-height:460px;object-fit:contain;opacity:" + (st.loadedFeedImageKeys[imageKey] ? "1" : "0") + ";transition:opacity .16s ease;",
+        imageLoad: () => this.setState(s => ({ loadedFeedImageKeys: { ...s.loadedFeedImageKeys, [imageKey]: true } })),
+        imageError: () => this.setState(s => ({ failedFeedImageKeys: { ...s.failedFeedImageKeys, [imageKey]: true }, loadedFeedImageKeys: { ...s.loadedFeedImageKeys, [imageKey]: false } })),
+        open: () => this.open(h.id),
         aria: rel + ", " + this.dest(h) + ", " + c.name + (h.time ? ", " + L.departure + " " + h.time : "")
       };
     };
@@ -926,7 +998,7 @@ class Component extends DCLogic {
     }
 
     const panelStyle = isMobile
-      ? "position:fixed;left:0;right:0;bottom:0;z-index:50;max-height:86vh;display:flex;flex-direction:column;background:var(--color-bg);border-top:1px solid var(--color-divider);border-radius:14px 14px 0 0;box-shadow:var(--shadow-lg);animation:sheetup .22s ease;overscroll-behavior:contain;"
+      ? "position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;background:var(--color-bg);animation:fadein .18s ease;overscroll-behavior:contain;"
       : "position:fixed;top:0;right:0;bottom:0;width:392px;z-index:50;display:flex;flex-direction:column;background:var(--color-bg);border-left:1px solid var(--color-divider);overflow-y:auto;";
 
     const themeGlyph = st.theme === "light" ? "☀" : st.theme === "dark" ? "☾" : "◐";
@@ -963,6 +1035,8 @@ class Component extends DCLogic {
       toggleMenu: () => this.setState(s => ({ menuOpen: !s.menuOpen })),
       closeMenu: () => this.setState({ menuOpen: false }),
       prefsLabel: (st.lang === "en" ? "EN" : "МК") + " " + themeGlyph,
+      headerControlsClass: "header-controls" + (st.headerPinned ? " is-stuck" : ""),
+      headerControlsRef: (el) => { this._headerControls = el; },
       langOptions: [
         { label: "Македонски", checked: st.lang === "mk", pick: () => this.setLang("mk") },
         { label: "English", checked: st.lang === "en", pick: () => this.setLang("en") }
@@ -992,7 +1066,7 @@ class Component extends DCLogic {
       panelContentDragStart: (e) => this.panelContentDragStart(e),
       close: () => this.close(),
       share: () => this.share(),
-      shareLabel: st.copied ? L.copied : L.copy
+      shareLabel: st.copied ? L.copied : L.share
     };
   }
 }
