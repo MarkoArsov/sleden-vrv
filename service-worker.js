@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sleden-vrv-v2';
+const CACHE_NAME = 'sleden-vrv-v3';
 const APP_SHELL = [
   './',
   './index.html',

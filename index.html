@@ -56,6 +56,12 @@
       width: 100%;
       margin-bottom: 18px;
     }
+    .header-sticky-sentinel {
+      display: block;
+      width: 100%;
+      height: 1px;
+      margin-top: -1px;
+    }
     .header-controls {
       width: 100% !important;
       margin-left: 0 !important;
@@ -134,6 +140,7 @@
           <h1 style="font-size: 31px; margin: 9px 0 3px; letter-spacing: 0; font-weight: 800; line-height: 1.02;">{{ appName }}</h1>
           <p style="margin: 0; font-size: 12.5px; font-weight: 650; line-height: 1.45; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ tagline }}</p>
         </div>
+        <span class="header-sticky-sentinel" ref="{{ headerStickySentinelRef }}" aria-hidden="true"></span>
         <div class="{{ headerControlsClass }}" ref="{{ headerControlsRef }}" style="margin-left: auto; flex: 1 1 220px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative;">
           <div class="seg view-switch" role="group" aria-label="{{ t.view }}">
             <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" checked="{{ calChecked }}" onChange="{{ pickCal }}">{{ t.calendar }}</label>
@@ -444,7 +451,10 @@ class Component extends DCLogic {
     const mq = window.matchMedia("(max-width: 860px)");
     this._stickyMq = window.matchMedia("(max-width: 700px)");
     const dk = window.matchMedia("(prefers-color-scheme: dark)");
-    this._sync = () => this.setState({ mobile: mq.matches, systemDark: dk.matches }, () => this.syncHeaderPinned());
+    this._sync = () => this.setState({ mobile: mq.matches, systemDark: dk.matches }, () => {
+      this.observeStickySentinel();
+      this.syncHeaderPinned();
+    });
     mq.addEventListener("change", this._sync);
     this._stickyMq.addEventListener("change", this._sync);
     dk.addEventListener("change", this._sync);
@@ -463,9 +473,17 @@ class Component extends DCLogic {
     window.addEventListener("keydown", this._onKey);
     this._onScroll = () => this.syncHeaderPinned();
     window.addEventListener("scroll", this._onScroll, { passive: true });
+    this._stickyObserver = typeof IntersectionObserver === "function"
+      ? new IntersectionObserver((entries) => {
+          const entry = entries[0];
+          const pinned = !!(this._stickyMq && this._stickyMq.matches && entry && !entry.isIntersecting && entry.boundingClientRect.bottom <= this.stickyTop() + 0.5);
+          if (pinned !== this.state.headerPinned) this.setState({ headerPinned: pinned });
+        })
+      : null;
     this.setState({ mobile: mq.matches, systemDark: dk.matches, view: this.props.defaultView || view, theme, lang, selected: this.hashId() }, () => {
       this.applyEnv();
       this.syncPageScrollLock();
+      this.observeStickySentinel();
       this.syncHeaderPinned();
     });
     this.load();
@@ -476,6 +494,7 @@ class Component extends DCLogic {
     window.removeEventListener("keydown", this._onKey);
     window.removeEventListener("scroll", this._onScroll);
     this._stickyMq.removeEventListener("change", this._sync);
+    if (this._stickyObserver) this._stickyObserver.disconnect();
     this.endPanelDragListeners();
     this.clearPanelDragFrame();
     this.endMonthSwipeListeners();
@@ -503,10 +522,28 @@ class Component extends DCLogic {
   }
 
   syncHeaderPinned() {
+    if (this._stickyObserver && this._observedStickySentinel) return;
     const control = this._headerControls;
-    const stickyTop = control ? parseFloat(window.getComputedStyle(control).top) || 0 : 0;
+    const stickyTop = this.stickyTop();
     const pinned = !!(this._stickyMq && this._stickyMq.matches && control && control.getBoundingClientRect().top <= stickyTop + 0.5);
     if (pinned !== this.state.headerPinned) this.setState({ headerPinned: pinned });
+  }
+
+  stickyTop() {
+    return this._headerControls ? parseFloat(window.getComputedStyle(this._headerControls).top) || 0 : 0;
+  }
+
+  observeStickySentinel() {
+    const sentinel = this._headerStickySentinel;
+    if (!this._stickyObserver || !sentinel) return;
+    this._stickyObserver.disconnect();
+    this._observedStickySentinel = sentinel;
+    this._stickyObserver = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      const pinned = !!(this._stickyMq && this._stickyMq.matches && entry && !entry.isIntersecting && entry.boundingClientRect.bottom <= this.stickyTop() + 0.5);
+      if (pinned !== this.state.headerPinned) this.setState({ headerPinned: pinned });
+    }, { threshold: 0, rootMargin: "-" + this.stickyTop() + "px 0px 0px 0px" });
+    this._stickyObserver.observe(sentinel);
   }
 
   t() { return this.L[this.state.lang] || this.L.mk; }
@@ -1048,6 +1085,7 @@ class Component extends DCLogic {
       prefsLabel: (st.lang === "en" ? "EN" : "МК") + " " + themeGlyph,
       headerControlsClass: "header-controls" + (st.headerPinned ? " is-stuck" : ""),
       headerControlsRef: (el) => { this._headerControls = el; },
+      headerStickySentinelRef: (el) => { this._headerStickySentinel = el; this.observeStickySentinel(); },
       headerPinned: st.headerPinned,
       langOptions: [
         { label: "Македонски", checked: st.lang === "mk", pick: () => this.setLang("mk") },
