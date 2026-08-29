@@ -126,6 +126,16 @@
   }
   .view-switch .seg-opt:has(input:checked) + .seg-opt,
   .view-switch .seg-opt + .seg-opt:has(input:checked) { border-left-color: var(--color-accent); }
+  .hike-carousel:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+  .hike-carousel .carousel-nav { opacity: 0; pointer-events: none; transition: opacity .16s ease; }
+  .hike-carousel:hover .carousel-nav,
+  .hike-carousel:focus-within .carousel-nav { opacity: 1; pointer-events: auto; }
+  .hike-carousel .carousel-nav:focus-visible,
+  .hike-carousel .carousel-dot:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  @media (hover: none) {
+    .hike-carousel .carousel-nav { display: none; }
+  }
 </style>
 </helmet>
 <div style="min-height: 100vh; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); font-variant-numeric: tabular-nums;">
@@ -289,10 +299,13 @@
                         <span style="display: flex; align-items: center; gap: 8px; padding: 13px 15px 0;">
                           <span aria-hidden="true" style="width: 9px; height: 9px; border-radius: 50%; background: {{ h.color }};"></span>
                           <span style="font-size: 12px; font-weight: 800; color: color-mix(in srgb, var(--color-text) 65%, transparent);">{{ h.club }}</span>
+                          <sc-if value="{{ h.hasMoreImages }}" hint-placeholder-val="{{ false }}">
+                            <span aria-label="{{ h.imageCountLabel }}" style="margin-left: auto; padding: 2px 6px; border: 1px solid color-mix(in srgb, var(--color-text) 18%, transparent); border-radius: 999px; font-size: 10.5px; font-weight: 800; color: color-mix(in srgb, var(--color-text) 52%, transparent);">{{ h.imageCount }}</span>
+                          </sc-if>
                         </span>
                         <sc-if value="{{ h.hasImage }}" hint-placeholder-val="{{ false }}">
                           <figure style="margin: 12px 0 0; background: color-mix(in srgb, var(--color-text) 5%, transparent);">
-                            <img sc-camel-on-load="{{ h.imageLoad }}" sc-camel-on-error="{{ h.imageError }}" sc-camel-src="{{ h.imageUrl }}" alt="{{ h.imageAlt }}" style="{{ h.imageStyle }}">
+                            <img loading="lazy" sc-camel-on-load="{{ h.imageLoad }}" sc-camel-on-error="{{ h.imageError }}" sc-camel-src="{{ h.imageUrl }}" alt="{{ h.imageAlt }}" style="{{ h.imageStyle }}">
                           </figure>
                         </sc-if>
                         <span style="display: block; padding: 14px 15px 16px;">
@@ -337,8 +350,27 @@
           <button type="button" class="btn btn-ghost" aria-label="{{ t.close }}" onClick="{{ close }}" style="margin-left: auto; min-width: 44px; min-height: 44px; font-size: 18px;">✕</button>
         </div>
         <sc-if value="{{ detail.hasImage }}" hint-placeholder-val="{{ false }}">
-          <figure style="margin: 18px 0 0; overflow: hidden; border-radius: 10px; background: color-mix(in srgb, var(--color-text) 5%, transparent);">
-            <img sc-camel-on-load="{{ detail.imageLoad }}" sc-camel-on-error="{{ detail.imageError }}" sc-camel-src="{{ detail.imageUrl }}" alt="{{ detail.imageAlt }}" style="{{ detail.imageStyle }}">
+          <figure class="hike-carousel" tabindex="0" onPointerDown="{{ detail.swipeStart }}" onKeyDown="{{ detail.keyDown }}" aria-roledescription="carousel" aria-label="{{ detail.carouselLabel }}" style="position: relative; margin: 18px 0 0; overflow: hidden; border-radius: 10px; background: color-mix(in srgb, var(--color-text) 5%, transparent); touch-action: pan-y;">
+            <div style="display: flex; width: 100%; transform: translateX({{ detail.trackOffset }}%); transition: transform .22s cubic-bezier(.2,.8,.2,1);">
+              <sc-for list="{{ detail.slides }}" as="slide" hint-placeholder-count="2">
+                <div aria-hidden="{{ slide.hidden }}" style="position: relative; flex: 0 0 100%; aspect-ratio: 4 / 5; overflow: hidden; background: color-mix(in srgb, var(--color-text) 5%, transparent);">
+                  <sc-if value="{{ slide.showPlaceholder }}" hint-placeholder-val="{{ true }}">
+                    <span aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(110deg, transparent 20%, color-mix(in srgb, var(--color-text) 7%, transparent) 45%, transparent 70%); animation: skel 1.25s ease-in-out infinite;"></span>
+                  </sc-if>
+                  <img loading="lazy" sc-camel-on-load="{{ slide.imageLoad }}" sc-camel-on-error="{{ slide.imageError }}" sc-camel-src="{{ slide.imageUrl }}" alt="{{ slide.imageAlt }}" style="{{ slide.imageStyle }}">
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ detail.hasMultipleImages }}" hint-placeholder-val="{{ true }}">
+              <button type="button" class="btn btn-ghost carousel-nav" onClick="{{ detail.previous }}" aria-label="{{ detail.previousLabel }}" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); min-width: 36px; min-height: 36px; padding: 0; border-radius: 50%; background: color-mix(in srgb, var(--color-bg) 80%, transparent);">←</button>
+              <button type="button" class="btn btn-ghost carousel-nav" onClick="{{ detail.next }}" aria-label="{{ detail.nextLabel }}" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); min-width: 36px; min-height: 36px; padding: 0; border-radius: 50%; background: color-mix(in srgb, var(--color-bg) 80%, transparent);">→</button>
+              <div role="group" aria-label="{{ detail.dotsLabel }}" style="position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 5px 7px; border-radius: 999px; background: color-mix(in srgb, var(--color-bg) 76%, transparent);">
+                <sc-for list="{{ detail.dots }}" as="dot" hint-placeholder-count="3">
+                  <button type="button" class="carousel-dot" aria-label="{{ dot.aria }}" aria-pressed="{{ dot.active }}" onClick="{{ dot.go }}" style="width: 9px; height: 9px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: {{ dot.color }};"></button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <span class="sr-only" aria-live="polite" aria-atomic="true">{{ detail.slideAnnouncement }}</span>
           </figure>
         </sc-if>
         <p style="font-family: var(--font-heading); font-size: 26px; font-weight: 800; margin: 14px 0 4px; line-height: 1.08; letter-spacing: 0;">{{ detail.when }}</p>
@@ -416,6 +448,7 @@ class Component extends DCLogic {
       departure: "Тргнување", timeSuffix: " часот", meeting: "Собирно место", price: "Цена", difficulty: "Тежина", organiser: "Организатор",
       sameDay: "Истиот ден", openPost: "Отвори објава", share: "Сподели", copied: "Копирано",
       close: "Затвори", detailLabel: "Детали за турата", imageAlt: "Фотографија од турата",
+      imageCount: (n) => n + " фотографии", carouselLabel: "Фотографии од турата", previousImage: "Претходна фотографија", nextImage: "Следна фотографија", imageSlide: (n, total) => "Фотографија " + n + " од " + total,
       readMore: "Прочитај повеќе", readLess: "Прикажи помалку"
     },
     en: {
@@ -441,11 +474,12 @@ class Component extends DCLogic {
       departure: "Departure", timeSuffix: "", meeting: "Meeting point", price: "Price", difficulty: "Difficulty", organiser: "Organiser",
       sameDay: "Same day", openPost: "Open the post", share: "Share", copied: "Copied",
       close: "Close", detailLabel: "Hike details", imageAlt: "Hike photo",
+      imageCount: (n) => n + " photos", carouselLabel: "Hike photos", previousImage: "Previous photo", nextImage: "Next photo", imageSlide: (n, total) => "Image " + n + " of " + total,
       readMore: "Read more", readLess: "Show less"
     }
   };
 
-  state = { status: "ok", data: null, view: "calendar", selected: null, mobile: false, systemDark: false, theme: "system", lang: "mk", copied: false, failedImageKey: null, loadedImageKey: null, failedFeedImageKeys: {}, loadedFeedImageKeys: {}, captionExpanded: false, headerPinned: false, monthOffset: 0, monthDrag: 0, monthDragging: false, monthAnimating: false, menuOpen: false };
+  state = { status: "ok", data: null, view: "calendar", selected: null, mobile: false, systemDark: false, theme: "system", lang: "mk", copied: false, carouselIndex: 0, failedDetailImageKeys: {}, loadedDetailImageKeys: {}, failedFeedImageKeys: {}, loadedFeedImageKeys: {}, captionExpanded: false, headerPinned: false, monthOffset: 0, monthDrag: 0, monthDragging: false, monthAnimating: false, menuOpen: false };
 
   componentDidMount() {
     const mq = window.matchMedia("(max-width: 860px)");
@@ -463,7 +497,7 @@ class Component extends DCLogic {
     } catch (e) {}
     const urlLang = new URLSearchParams(location.search).get("lang");
     if (urlLang === "mk" || urlLang === "en") lang = urlLang;
-    this._onNav = () => this.setState({ selected: this.hashId(), copied: false, failedImageKey: null, loadedImageKey: null, captionExpanded: false });
+    this._onNav = () => this.setState({ selected: this.hashId(), copied: false, ...this.resetDetailMedia(), captionExpanded: false });
     window.addEventListener("hashchange", this._onNav);
     window.addEventListener("popstate", this._onNav);
     this._onKey = (e) => { if (e.key === "Escape") { if (this.state.menuOpen) this.setState({ menuOpen: false }); else if (this.state.selected) this.close(); } };
@@ -486,6 +520,7 @@ class Component extends DCLogic {
     this.endPanelDragListeners();
     this.clearPanelDragFrame();
     this.endMonthSwipeListeners();
+    this.endCarouselSwipeListeners();
     this.unlockPageScroll();
     clearTimeout(this._monthExitTimer);
     clearTimeout(this._monthEnterTimer);
@@ -530,11 +565,21 @@ class Component extends DCLogic {
   iso(d) { return new Date(d.getTime() - d.getTimezoneOffset() * 60e3).toISOString().slice(0, 10); }
   addDays(base, n) { const d = new Date(base.getTime()); d.setDate(d.getDate() + n); return d; }
   today() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+  resetDetailMedia() { return { carouselIndex: 0, failedDetailImageKeys: {}, loadedDetailImageKeys: {} }; }
+  imageUrls(h) {
+    const values = Array.isArray(h && h.images)
+      ? h.images
+      : (h && typeof h.image === "string" ? [h.image] : []);
+    return values.filter(url => typeof url === "string" && url.trim()).map(url => url.trim());
+  }
+  normalizePayload(data) {
+    return { ...data, hikes: data.hikes.map(h => ({ ...h, images: this.imageUrls(h) })) };
+  }
 
   sampleHikes() {
     return [
-      { id: "DcSlvmoMpk6", club: "psk_stratus", date: "2026-09-05", time: "04:00", destination: "Дурмитор – Боботов Кук, Црно, Змиње и Барно Езеро", destinationEn: null, meetingPoint: "Железничка Станица Скопје – Пошта 2", price: "160 евра / 9.850 денари", difficulty: null, difficultyEn: null, caption: "Три дена меѓу Дурмиторските врвови и езера.\n\nТурата е наменета за планинари со добра кондиција и соодветна опрема.", captionEn: null, imageUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=max&w=1000&q=80", detailsFrom: "caption", sourceUrl: "https://www.instagram.com/p/DcSlvmoMpk6/", postedAt: "2026-08-21T05:33:36.000Z" },
-      { id: "DcRSJhDCjUS", club: "ilovehikingmacedonia", date: "2026-09-06", time: "05:00", destination: "Голем Кораб 2764 м", destinationEn: "Golem Korab 2764 m", meetingPoint: "Железничка Станица Скопје – Пошта 2", price: "1200 ден по човек за организиран превоз; влез во НП Маврово 100 ден по лице", difficulty: "тешка тура", difficultyEn: "difficult route", caption: "Се искачуваме на највисокиот врв во Македонија.\n\nПотребни се планинарски обувки, вода и облека за променливо време.", captionEn: "We are climbing Macedonia's highest peak.\n\nBring hiking boots, water, and clothing for changeable weather.", imageUrl: null, detailsFrom: "both", sourceUrl: "https://www.instagram.com/p/DcRSJhDCjUS/", postedAt: "2026-08-20T17:19:24.000Z" }
+      { id: "DcSlvmoMpk6", club: "psk_stratus", date: "2026-09-05", time: "04:00", destination: "Дурмитор – Боботов Кук, Црно, Змиње и Барно Езеро", destinationEn: null, meetingPoint: "Железничка Станица Скопје – Пошта 2", price: "160 евра / 9.850 денари", difficulty: null, difficultyEn: null, caption: "Три дена меѓу Дурмиторските врвови и езера.\n\nТурата е наменета за планинари со добра кондиција и соодветна опрема.", captionEn: null, images: ["https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=max&w=1000&q=80", "https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=max&w=1000&q=80", "https://images.unsplash.com/photo-1464823063530-08f10ed1a2dd?auto=format&fit=max&w=1000&q=80"], detailsFrom: "caption", sourceUrl: "https://www.instagram.com/p/DcSlvmoMpk6/", postedAt: "2026-08-21T05:33:36.000Z" },
+      { id: "DcRSJhDCjUS", club: "ilovehikingmacedonia", date: "2026-09-06", time: "05:00", destination: "Голем Кораб 2764 м", destinationEn: "Golem Korab 2764 m", meetingPoint: "Железничка Станица Скопје – Пошта 2", price: "1200 ден по човек за организиран превоз; влез во НП Маврово 100 ден по лице", difficulty: "тешка тура", difficultyEn: "difficult route", caption: "Се искачуваме на највисокиот врв во Македонија.\n\nПотребни се планинарски обувки, вода и облека за променливо време.", captionEn: "We are climbing Macedonia's highest peak.\n\nBring hiking boots, water, and clothing for changeable weather.", images: [], detailsFrom: "both", sourceUrl: "https://www.instagram.com/p/DcRSJhDCjUS/", postedAt: "2026-08-20T17:19:24.000Z" }
     ];
   }
   denseHikes() {
@@ -552,11 +597,11 @@ class Component extends DCLogic {
   }
 
   load() {
-    this.setState({ failedFeedImageKeys: {}, loadedFeedImageKeys: {} });
+    this.setState({ failedFeedImageKeys: {}, loadedFeedImageKeys: {}, ...this.resetDetailMedia() });
     const src = this.props.dataSource || "live";
     const now = new Date();
     const gen = this.props.staleDemo ? new Date(now.getTime() - 76 * 3600e3) : new Date(now.getTime() - 4 * 60e3);
-    const wrap = (hikes) => ({ generatedAt: gen.toISOString(), servedAt: now.toISOString(), count: hikes.length, hikes });
+    const wrap = (hikes) => this.normalizePayload({ generatedAt: gen.toISOString(), servedAt: now.toISOString(), count: hikes.length, hikes });
     if (src === "loading") return this.setState({ status: "loading", data: null });
     if (src === "error") return this.setState({ status: "error", data: null });
     if (src === "empty") return this.setState({ status: "ok", data: wrap([]) });
@@ -565,7 +610,7 @@ class Component extends DCLogic {
       this.setState({ status: "loading", data: null });
       fetch(this.API_URL).then(r => r.json()).then(d => {
         if (!d || !Array.isArray(d.hikes)) throw new Error("malformed");
-        this.setState({ status: "ok", data: d });
+        this.setState({ status: "ok", data: this.normalizePayload(d) });
       }).catch(() => this.setState({ status: "error", data: null }));
       return;
     }
@@ -617,14 +662,68 @@ class Component extends DCLogic {
     const url = location.pathname + location.search + "#hike=" + id;
     if (this.hashId()) history.replaceState(null, "", url);
     else history.pushState(null, "", url);
-    this.setState({ selected: id, copied: false, failedImageKey: null, loadedImageKey: null, captionExpanded: false });
+    this.setState({ selected: id, copied: false, ...this.resetDetailMedia(), captionExpanded: false });
   }
   close() {
     if (this.hashId()) {
       if (history.length > 1) { history.back(); return; }
       history.replaceState(null, "", location.pathname + location.search);
     }
-    this.setState({ selected: null, copied: false, failedImageKey: null, loadedImageKey: null, captionExpanded: false });
+    this.setState({ selected: null, copied: false, ...this.resetDetailMedia(), captionExpanded: false });
+  }
+  moveCarousel(direction, total) {
+    if (total < 2) return;
+    this.setState(s => ({ carouselIndex: (s.carouselIndex + direction + total) % total }));
+  }
+  carouselKeyDown(e, total) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    e.stopPropagation();
+    this.moveCarousel(e.key === "ArrowRight" ? 1 : -1, total);
+  }
+  endCarouselSwipeListeners() {
+    if (this._carouselSwipeMove) window.removeEventListener("pointermove", this._carouselSwipeMove);
+    if (this._carouselSwipeUp) window.removeEventListener("pointerup", this._carouselSwipeUp);
+    if (this._carouselSwipeCancel) window.removeEventListener("pointercancel", this._carouselSwipeCancel);
+    this._carouselSwipeMove = null;
+    this._carouselSwipeUp = null;
+    this._carouselSwipeCancel = null;
+  }
+  carouselSwipeStart(e, total) {
+    if (total < 2 || (e.button && e.button !== 0) || (e.target && e.target.closest && e.target.closest("button"))) return;
+    this.endCarouselSwipeListeners();
+    const target = e.currentTarget;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startedAt = Date.now();
+    let swiping = false;
+    let lastDx = 0;
+
+    this._carouselSwipeMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!swiping) {
+        if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) {
+          this.endCarouselSwipeListeners();
+          return;
+        }
+        if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
+        swiping = true;
+        try { target.setPointerCapture && target.setPointerCapture(e.pointerId); } catch (err) {}
+      }
+      lastDx = dx;
+      if (ev.cancelable) ev.preventDefault();
+    };
+    this._carouselSwipeUp = () => {
+      this.endCarouselSwipeListeners();
+      if (!swiping) return;
+      const fast = Math.abs(lastDx) > 34 && Date.now() - startedAt < 260;
+      if (Math.abs(lastDx) > 54 || fast) this.moveCarousel(lastDx < 0 ? 1 : -1, total);
+    };
+    this._carouselSwipeCancel = () => this.endCarouselSwipeListeners();
+    window.addEventListener("pointermove", this._carouselSwipeMove, { passive: false });
+    window.addEventListener("pointerup", this._carouselSwipeUp);
+    window.addEventListener("pointercancel", this._carouselSwipeCancel);
   }
   share() {
     if (navigator.share) {
@@ -912,7 +1011,8 @@ class Component extends DCLogic {
       const c = this.club(h.club);
       const rel = this.relLabel(h.date);
       const caption = this.caption(h);
-      const imageUrl = typeof h.imageUrl === "string" && h.imageUrl.trim() ? h.imageUrl : null;
+      const images = this.imageUrls(h);
+      const imageUrl = images[0] || null;
       const imageKey = imageUrl ? h.id + ":" + imageUrl : null;
       return {
         id: h.id, club: c.name, color: c.color, destination: this.dest(h),
@@ -920,11 +1020,12 @@ class Component extends DCLogic {
         caption, hasCaption: !!caption.trim(),
         captionStyle: "display:-webkit-box;margin-top:12px;font-size:14px;line-height:1.65;white-space:pre-wrap;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:" + muted(70) + ";",
         imageUrl, hasImage: !!imageUrl && !st.failedFeedImageKeys[imageKey], imageAlt: L.imageAlt,
+        imageCount: images.length, hasMoreImages: images.length > 1, imageCountLabel: L.imageCount(images.length),
         imageStyle: "display:block;width:100%;height:auto;max-height:460px;object-fit:contain;opacity:" + (st.loadedFeedImageKeys[imageKey] ? "1" : "0") + ";transition:opacity .16s ease;",
         imageLoad: () => this.setState(s => ({ loadedFeedImageKeys: { ...s.loadedFeedImageKeys, [imageKey]: true } })),
         imageError: () => this.setState(s => ({ failedFeedImageKeys: { ...s.failedFeedImageKeys, [imageKey]: true }, loadedFeedImageKeys: { ...s.loadedFeedImageKeys, [imageKey]: false } })),
         open: () => this.open(h.id),
-        aria: rel + ", " + this.dest(h) + ", " + c.name + (h.time ? ", " + L.departure + " " + h.time : "")
+        aria: rel + ", " + this.dest(h) + ", " + c.name + (h.time ? ", " + L.departure + " " + h.time : "") + (images.length > 1 ? ", " + L.imageCount(images.length) : "")
       };
     };
     hikes.forEach(h => {
@@ -998,8 +1099,19 @@ class Component extends DCLogic {
       if (this.diff(sel)) rows.push({ label: L.difficulty, value: this.diff(sel) });
       rows.push({ label: L.organiser, value: c.name });
       const caption = this.caption(sel);
-      const imageUrl = typeof sel.imageUrl === "string" && sel.imageUrl.trim() ? sel.imageUrl : null;
-      const imageKey = imageUrl ? sel.id + ":" + imageUrl : null;
+      const liveImages = this.imageUrls(sel).filter(url => !st.failedDetailImageKeys[sel.id + ":" + url]);
+      const activeImageIndex = Math.min(st.carouselIndex, Math.max(0, liveImages.length - 1));
+      const slides = liveImages.map((imageUrl, index) => {
+        const imageKey = sel.id + ":" + imageUrl;
+        const loaded = !!st.loadedDetailImageKeys[imageKey];
+        return {
+          imageUrl, imageAlt: L.imageAlt + " — " + L.imageSlide(index + 1, liveImages.length),
+          hidden: index !== activeImageIndex, showPlaceholder: !loaded,
+          imageStyle: "display:block;width:100%;height:100%;object-fit:cover;opacity:" + (loaded ? "1" : "0") + ";transition:opacity .16s ease;",
+          imageLoad: () => this.setState(s => ({ loadedDetailImageKeys: { ...s.loadedDetailImageKeys, [imageKey]: true } })),
+          imageError: () => this.setState(s => ({ failedDetailImageKeys: { ...s.failedDetailImageKeys, [imageKey]: true }, loadedDetailImageKeys: { ...s.loadedDetailImageKeys, [imageKey]: false } }))
+        };
+      });
       const siblings = (byDate[sel.date] || []).filter(h => h.id !== sel.id).map(h => ({
         destination: this.dest(h), color: this.club(h.club).color, open: () => this.open(h.id)
       }));
@@ -1010,10 +1122,13 @@ class Component extends DCLogic {
         captionExpanded: st.captionExpanded, captionToggleLabel: st.captionExpanded ? L.readLess : L.readMore,
         captionStyle: "margin:0;font-size:14px;line-height:1.7;white-space:pre-wrap;text-wrap:pretty;color:" + muted(68) + ";" + (!st.captionExpanded && caption.length > 700 ? "display:-webkit-box;-webkit-line-clamp:8;-webkit-box-orient:vertical;overflow:hidden;" : ""),
         toggleCaption: () => this.setState(s => ({ captionExpanded: !s.captionExpanded })),
-        imageUrl, hasImage: !!imageUrl && st.failedImageKey !== imageKey,
-        imageAlt: L.imageAlt, imageStyle: "display:block;width:100%;height:auto;max-height:520px;object-fit:contain;opacity:" + (st.loadedImageKey === imageKey ? "1" : "0") + ";transition:opacity .16s ease;",
-        imageLoad: () => this.setState({ loadedImageKey: imageKey }),
-        imageError: () => this.setState({ failedImageKey: imageKey, loadedImageKey: null }),
+        hasImage: slides.length > 0, slides, hasMultipleImages: slides.length > 1,
+        trackOffset: -activeImageIndex * 100, carouselLabel: L.carouselLabel,
+        previousLabel: L.previousImage, nextLabel: L.nextImage, dotsLabel: L.carouselLabel,
+        slideAnnouncement: slides.length ? L.imageSlide(activeImageIndex + 1, slides.length) : "",
+        previous: () => this.moveCarousel(-1, slides.length), next: () => this.moveCarousel(1, slides.length),
+        keyDown: (e) => this.carouselKeyDown(e, slides.length), swipeStart: (e) => this.carouselSwipeStart(e, slides.length),
+        dots: slides.map((slide, index) => ({ active: index === activeImageIndex, color: index === activeImageIndex ? "var(--color-accent)" : "color-mix(in srgb, var(--color-text) 38%, transparent)", aria: L.imageSlide(index + 1, slides.length), go: () => this.setState({ carouselIndex: index }) })),
         siblings, hasSiblings: siblings.length > 0
       };
     }
