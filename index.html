@@ -42,9 +42,14 @@
       --color-accent-2: #d7a761;
     }
   }
-  @keyframes skel { 0%, 100% { opacity: .3 } 50% { opacity: .13 } }
+  @keyframes skel { from { background-position: 180% 0; } to { background-position: -70% 0; } }
   @keyframes sheetup { from { transform: translateY(18px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
   @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
+  .skeleton {
+    background: linear-gradient(105deg, color-mix(in srgb, var(--color-text) 5%, transparent) 18%, color-mix(in srgb, var(--color-text) 11%, transparent) 42%, color-mix(in srgb, var(--color-text) 5%, transparent) 66%) !important;
+    background-size: 240% 100% !important;
+    animation: skel 1.45s linear infinite !important;
+  }
   @media (max-width: 700px) {
     .app-header {
       display: contents !important;
@@ -81,12 +86,25 @@
       border-bottom: 0;
       box-shadow: none;
     }
+    .header-controls.is-stuck {
+      border-bottom: 0;
+    }
+    .header-controls.is-stuck::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 1px;
+      background: var(--color-divider);
+      pointer-events: none;
+    }
     .sticky-header-surface {
       position: fixed;
       inset: 0 0 auto;
       height: calc(env(safe-area-inset-top) + 66px);
       background: var(--color-bg);
-      border-bottom: 1px solid color-mix(in srgb, var(--color-text) 30%, var(--color-bg));
+      border-bottom: 0;
       box-shadow: 0 10px 24px rgba(0, 0, 0, .36), 0 1px 0 rgba(255, 255, 255, .09);
       z-index: 19;
       pointer-events: none;
@@ -95,7 +113,7 @@
       width: 100% !important;
       min-width: 0;
       display: grid !important;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .view-switch .seg-opt {
       min-width: 0;
@@ -126,6 +144,7 @@
   }
   .view-switch .seg-opt:has(input:checked) + .seg-opt,
   .view-switch .seg-opt + .seg-opt:has(input:checked) { border-left-color: var(--color-accent); }
+  .view-icon { display: none; }
   .hike-carousel:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
   .hike-carousel .carousel-nav { opacity: 0; pointer-events: none; transition: opacity .16s ease; }
   .hike-carousel:hover .carousel-nav,
@@ -133,8 +152,29 @@
   .hike-carousel .carousel-nav:focus-visible,
   .hike-carousel .carousel-dot:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  @media (hover: hover) {
+    .calendar-hike:hover { transform: translateY(-2px); }
+    .month-hike-row:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
+    .hike-card:hover { border-color: color-mix(in srgb, var(--color-text) 32%, transparent); }
+    .sibling-hike:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+  }
+  @media (max-width: 700px) {
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .btn-ghost:hover,
+    .seg-opt:not(:has(input:checked)):hover { background: transparent; }
+    .hike-carousel:hover .carousel-nav { opacity: 0; pointer-events: none; }
+  }
   @media (hover: none) {
     .hike-carousel .carousel-nav { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton { animation: none !important; }
+  }
+  @media (max-width: 390px) {
+    .view-switch .seg-opt { padding-inline: 0; }
+    .view-switch .view-label { display: none; }
+    .view-switch .view-icon { display: block; width: 17px; height: 17px; }
   }
 </style>
 </helmet>
@@ -153,8 +193,9 @@
         <span class="header-sticky-sentinel" ref="{{ headerStickySentinelRef }}" aria-hidden="true"></span>
         <div class="{{ headerControlsClass }}" ref="{{ headerControlsRef }}" style="margin-left: auto; flex: 1 1 220px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative;">
           <div class="seg view-switch" role="group" aria-label="{{ t.view }}">
-            <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" checked="{{ calChecked }}" onChange="{{ pickCal }}">{{ t.calendar }}</label>
-            <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" checked="{{ listChecked }}" onChange="{{ pickList }}">{{ t.list }}</label>
+            <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" aria-label="{{ t.calendar }}" checked="{{ calChecked }}" onChange="{{ pickCal }}"><span class="view-label">{{ t.calendar }}</span><svg class="view-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"></rect><path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></label>
+            <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" aria-label="{{ t.list }}" checked="{{ listChecked }}" onChange="{{ pickList }}"><span class="view-label">{{ t.list }}</span><svg class="view-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path></svg></label>
+            <label class="seg-opt" style="min-height: 40px;"><input type="radio" name="view" aria-label="{{ t.favorites }}" checked="{{ favoritesChecked }}" onChange="{{ pickFavorites }}"><span class="view-label">{{ t.favorites }}</span><svg class="view-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.4 4.8 13.7a4.7 4.7 0 0 1 6.6-6.7L12 7.7l.6-.7a4.7 4.7 0 0 1 6.6 6.7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg></label>
           </div>
           <button type="button" class="btn btn-ghost prefs-toggle" onClick="{{ toggleMenu }}" aria-haspopup="menu" aria-expanded="{{ menuOpen }}" aria-label="{{ t.prefs }}" style="min-height: 40px; min-width: 44px; font-size: 12px; letter-spacing: 0; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ prefsLabel }}</button>
           <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
@@ -190,19 +231,19 @@
 
       <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
         <div aria-busy="true" aria-label="{{ t.loading }}" style="padding-top: 40px;">
-          <div style="height: 30px; width: 42%; border-radius: 4px; background: var(--color-text); animation: skel 1.5s ease-in-out infinite;"></div>
+          <div class="skeleton" style="height: 30px; width: 42%; border-radius: 4px;"></div>
           <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-top: 26px;">
-            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out infinite;"></div>
-            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .1s infinite;"></div>
-            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .2s infinite;"></div>
-            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .3s infinite;"></div>
-            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .4s infinite;"></div>
-            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .5s infinite;"></div>
-            <div style="height: 34px; border-radius: 50%; background: var(--color-text); animation: skel 1.5s ease-in-out .6s infinite;"></div>
+            <div class="skeleton" style="height: 34px; border-radius: 50%;"></div>
+            <div class="skeleton" style="height: 34px; border-radius: 50%; animation-delay: .1s !important;"></div>
+            <div class="skeleton" style="height: 34px; border-radius: 50%; animation-delay: .2s !important;"></div>
+            <div class="skeleton" style="height: 34px; border-radius: 50%; animation-delay: .3s !important;"></div>
+            <div class="skeleton" style="height: 34px; border-radius: 50%; animation-delay: .4s !important;"></div>
+            <div class="skeleton" style="height: 34px; border-radius: 50%; animation-delay: .5s !important;"></div>
+            <div class="skeleton" style="height: 34px; border-radius: 50%; animation-delay: .6s !important;"></div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 26px; margin-top: 44px;">
-            <div style="height: 22px; width: 72%; border-radius: 4px; background: var(--color-text); animation: skel 1.5s ease-in-out .2s infinite;"></div>
-            <div style="height: 22px; width: 58%; border-radius: 4px; background: var(--color-text); animation: skel 1.5s ease-in-out .35s infinite;"></div>
+            <div class="skeleton" style="height: 22px; width: 72%; border-radius: 4px; animation-delay: .2s !important;"></div>
+            <div class="skeleton" style="height: 22px; width: 58%; border-radius: 4px; animation-delay: .35s !important;"></div>
           </div>
         </div>
       </sc-if>
@@ -256,7 +297,7 @@
                   <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
                     <div style="{{ c.cellStyle }}">
                       <sc-if value="{{ c.hike }}" hint-placeholder-val="{{ false }}">
-                        <button type="button" onClick="{{ c.open }}" aria-label="{{ c.aria }}" style="width: 100%; min-width: 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: transparent; cursor: pointer; font: inherit; color: inherit; padding: 3px 0; border-radius: 8px; transition: transform .15s ease;" style-hover="transform: translateY(-2px);">
+                        <button type="button" class="calendar-hike" onClick="{{ c.open }}" aria-label="{{ c.aria }}" style="width: 100%; min-width: 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: transparent; cursor: pointer; font: inherit; color: inherit; padding: 3px 0; border-radius: 8px; transition: transform .15s ease;">
                           <span style="{{ c.markerStyle }}">{{ c.num }}</span>
                           <sc-if value="{{ c.multi }}" hint-placeholder-val="{{ false }}">
                             <span style="font-size: 9px; font-weight: 800; letter-spacing: 0; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ c.countLabel }}</span>
@@ -273,7 +314,7 @@
                 <sc-if value="{{ hasMonthHikes }}" hint-placeholder-val="{{ true }}">
                   <div style="margin-top: 34px; display: flex; flex-direction: column; gap: 4px;">
                     <sc-for list="{{ monthHikes }}" as="m" hint-placeholder-count="2">
-                      <button type="button" onClick="{{ m.open }}" aria-label="{{ m.aria }}" style="width: 100%; display: grid; grid-template-columns: 4px 74px 1fr; align-items: center; gap: 0 14px; text-align: left; background: transparent; border: 0; padding: 11px 8px; border-radius: 8px; min-height: 44px; cursor: pointer; font: inherit; color: inherit;" style-hover="background: color-mix(in srgb, var(--color-text) 6%, transparent);">
+                      <button type="button" class="month-hike-row" onClick="{{ m.open }}" aria-label="{{ m.aria }}" style="width: 100%; display: grid; grid-template-columns: 4px 74px 1fr; align-items: center; gap: 0 14px; text-align: left; background: transparent; border: 0; padding: 11px 8px; border-radius: 8px; min-height: 44px; cursor: pointer; font: inherit; color: inherit;">
                         <span aria-hidden="true" style="align-self: stretch; border-radius: 2px; background: {{ m.color }};"></span>
                         <span style="font-size: 12.5px; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ m.day }}</span>
                         <span style="font-family: var(--font-heading); font-weight: 800; font-size: 17px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">{{ m.destination }}</span>
@@ -295,32 +336,81 @@
                   <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 800; letter-spacing: 0; color: color-mix(in srgb, var(--color-text) 56%, transparent); margin: 0 0 8px;">{{ g.label }}</h3>
                   <div style="display: flex; flex-direction: column; gap: 18px;">
                     <sc-for list="{{ g.items }}" as="h" hint-placeholder-count="2">
-                      <button type="button" onClick="{{ h.open }}" aria-label="{{ h.aria }}" style="width: 100%; overflow: hidden; text-align: left; background: var(--color-surface); border: 1px solid var(--color-divider); padding: 0; border-radius: 12px; cursor: pointer; font: inherit; color: inherit;" style-hover="border-color: color-mix(in srgb, var(--color-text) 32%, transparent);">
+                      <article class="hike-card" style="width: 100%; overflow: hidden; text-align: left; background: var(--color-surface); border: 1px solid var(--color-divider); padding: 0; border-radius: 12px; font: inherit; color: inherit;">
                         <span style="display: flex; align-items: center; gap: 8px; padding: 13px 15px 0;">
                           <span aria-hidden="true" style="width: 9px; height: 9px; border-radius: 50%; background: {{ h.color }};"></span>
                           <span style="font-size: 12px; font-weight: 800; color: color-mix(in srgb, var(--color-text) 65%, transparent);">{{ h.club }}</span>
                           <sc-if value="{{ h.hasMoreImages }}" hint-placeholder-val="{{ false }}">
                             <span aria-label="{{ h.imageCountLabel }}" style="margin-left: auto; padding: 2px 6px; border: 1px solid color-mix(in srgb, var(--color-text) 18%, transparent); border-radius: 999px; font-size: 10.5px; font-weight: 800; color: color-mix(in srgb, var(--color-text) 52%, transparent);">{{ h.imageCount }}</span>
                           </sc-if>
+                          <button type="button" onClick="{{ h.toggleFavorite }}" aria-label="{{ h.favoriteLabel }}" aria-pressed="{{ h.favorite }}" style="margin-left: 2px; min-width: 36px; min-height: 36px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; font: inherit; color: {{ h.favoriteColor }};">{{ h.favoriteGlyph }}</button>
                         </span>
                         <sc-if value="{{ h.hasImage }}" hint-placeholder-val="{{ false }}">
-                          <figure style="margin: 12px 0 0; background: color-mix(in srgb, var(--color-text) 5%, transparent);">
-                            <img loading="lazy" sc-camel-on-load="{{ h.imageLoad }}" sc-camel-on-error="{{ h.imageError }}" sc-camel-src="{{ h.imageUrl }}" alt="{{ h.imageAlt }}" style="{{ h.imageStyle }}">
+                          <figure class="hike-carousel" tabindex="0" onPointerDown="{{ h.swipeStart }}" onKeyDown="{{ h.keyDown }}" aria-roledescription="carousel" aria-label="{{ h.carouselLabel }}" style="position: relative; margin: 12px 0 0; overflow: hidden; background: color-mix(in srgb, var(--color-text) 5%, transparent); touch-action: pan-y;">
+                            <div style="display: flex; width: 100%; transform: translateX({{ h.trackOffset }}%); transition: transform .28s cubic-bezier(.22,.61,.36,1);">
+                              <sc-for list="{{ h.slides }}" as="slide" hint-placeholder-count="2">
+                                <div aria-hidden="{{ slide.hidden }}" style="position: relative; flex: 0 0 100%; aspect-ratio: 4 / 3; overflow: hidden; background: color-mix(in srgb, var(--color-text) 5%, transparent);">
+                                  <sc-if value="{{ slide.showPlaceholder }}" hint-placeholder-val="{{ true }}">
+                                    <span class="skeleton" aria-hidden="true" style="position: absolute; inset: 0;"></span>
+                                  </sc-if>
+                                  <img loading="lazy" sc-camel-on-load="{{ slide.imageLoad }}" sc-camel-on-error="{{ slide.imageError }}" sc-camel-src="{{ slide.imageUrl }}" alt="{{ slide.imageAlt }}" style="{{ slide.imageStyle }}">
+                                </div>
+                              </sc-for>
+                            </div>
+                            <sc-if value="{{ h.hasMultipleImages }}" hint-placeholder-val="{{ true }}">
+                              <button type="button" class="btn btn-ghost carousel-nav" onClick="{{ h.previous }}" aria-label="{{ h.previousLabel }}" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); min-width: 36px; min-height: 36px; padding: 0; border-radius: 50%; background: color-mix(in srgb, var(--color-bg) 80%, transparent);">←</button>
+                              <button type="button" class="btn btn-ghost carousel-nav" onClick="{{ h.next }}" aria-label="{{ h.nextLabel }}" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); min-width: 36px; min-height: 36px; padding: 0; border-radius: 50%; background: color-mix(in srgb, var(--color-bg) 80%, transparent);">→</button>
+                              <div role="group" aria-label="{{ h.dotsLabel }}" style="position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 5px 7px; border-radius: 999px; background: color-mix(in srgb, var(--color-bg) 76%, transparent);">
+                                <sc-for list="{{ h.dots }}" as="dot" hint-placeholder-count="3">
+                                  <button type="button" class="carousel-dot" aria-label="{{ dot.aria }}" aria-pressed="{{ dot.active }}" onClick="{{ dot.go }}" style="width: 9px; height: 9px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: {{ dot.color }};"></button>
+                                </sc-for>
+                              </div>
+                            </sc-if>
+                            <span class="sr-only" aria-live="polite" aria-atomic="true">{{ h.slideAnnouncement }}</span>
                           </figure>
                         </sc-if>
-                        <span style="display: block; padding: 14px 15px 16px;">
+                        <button type="button" onClick="{{ h.open }}" aria-label="{{ h.aria }}" style="display: block; width: 100%; border: 0; padding: 14px 15px 16px; text-align: left; background: transparent; cursor: pointer; font: inherit; color: inherit;">
                           <span style="display: block; font-family: var(--font-heading); font-weight: 800; font-size: 20px; line-height: 1.2; letter-spacing: 0; text-wrap: pretty;">{{ h.destination }}</span>
                           <span style="display: block; margin-top: 5px; font-size: 12.5px; font-weight: 650; color: color-mix(in srgb, var(--color-text) 60%, transparent);">{{ h.meta }}</span>
                           <sc-if value="{{ h.hasCaption }}" hint-placeholder-val="{{ false }}">
                             <span style="{{ h.captionStyle }}">{{ h.caption }}</span>
                           </sc-if>
-                        </span>
-                      </button>
+                        </button>
+                      </article>
                     </sc-for>
                   </div>
                 </section>
               </sc-for>
             </div>
+          </sc-if>
+
+          <sc-if value="{{ showFavorites }}" hint-placeholder-val="{{ false }}">
+            <section style="padding-top: 34px;">
+              <h2 style="font-family: var(--font-heading); font-size: 23px; font-weight: 800; margin: 0; letter-spacing: 0;">{{ t.favorites }}</h2>
+              <sc-if value="{{ hasFavorites }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 14px;">
+                  <sc-for list="{{ favoriteRows }}" as="h" hint-placeholder-count="2">
+                    <article class="hike-card" style="width: 100%; overflow: hidden; text-align: left; background: var(--color-surface); border: 1px solid var(--color-divider); padding: 0; border-radius: 12px; font: inherit; color: inherit;">
+                      <span style="display: flex; align-items: center; gap: 8px; padding: 13px 15px 0;">
+                        <span aria-hidden="true" style="width: 9px; height: 9px; border-radius: 50%; background: {{ h.color }};"></span>
+                        <span style="font-size: 12px; font-weight: 800; color: color-mix(in srgb, var(--color-text) 65%, transparent);">{{ h.club }}</span>
+                        <sc-if value="{{ h.hasMoreImages }}" hint-placeholder-val="{{ false }}"><span aria-label="{{ h.imageCountLabel }}" style="margin-left: auto; padding: 2px 6px; border: 1px solid color-mix(in srgb, var(--color-text) 18%, transparent); border-radius: 999px; font-size: 10.5px; font-weight: 800; color: color-mix(in srgb, var(--color-text) 52%, transparent);">{{ h.imageCount }}</span></sc-if>
+                        <button type="button" onClick="{{ h.toggleFavorite }}" aria-label="{{ h.favoriteLabel }}" aria-pressed="{{ h.favorite }}" style="margin-left: 2px; min-width: 36px; min-height: 36px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; font: inherit; color: {{ h.favoriteColor }};">{{ h.favoriteGlyph }}</button>
+                      </span>
+                      <sc-if value="{{ h.hasImage }}" hint-placeholder-val="{{ false }}">
+                        <figure class="hike-carousel" tabindex="0" onPointerDown="{{ h.swipeStart }}" onKeyDown="{{ h.keyDown }}" aria-roledescription="carousel" aria-label="{{ h.carouselLabel }}" style="position: relative; margin: 12px 0 0; overflow: hidden; background: color-mix(in srgb, var(--color-text) 5%, transparent); touch-action: pan-y;">
+                          <div style="display: flex; width: 100%; transform: translateX({{ h.trackOffset }}%); transition: transform .28s cubic-bezier(.22,.61,.36,1);"><sc-for list="{{ h.slides }}" as="slide" hint-placeholder-count="2"><div aria-hidden="{{ slide.hidden }}" style="position: relative; flex: 0 0 100%; aspect-ratio: 4 / 3; overflow: hidden; background: color-mix(in srgb, var(--color-text) 5%, transparent);"><sc-if value="{{ slide.showPlaceholder }}" hint-placeholder-val="{{ true }}"><span class="skeleton" aria-hidden="true" style="position: absolute; inset: 0;"></span></sc-if><img loading="lazy" sc-camel-on-load="{{ slide.imageLoad }}" sc-camel-on-error="{{ slide.imageError }}" sc-camel-src="{{ slide.imageUrl }}" alt="{{ slide.imageAlt }}" style="{{ slide.imageStyle }}"></div></sc-for></div>
+                          <sc-if value="{{ h.hasMultipleImages }}" hint-placeholder-val="{{ true }}"><button type="button" class="btn btn-ghost carousel-nav" onClick="{{ h.previous }}" aria-label="{{ h.previousLabel }}" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); min-width: 36px; min-height: 36px; padding: 0; border-radius: 50%; background: color-mix(in srgb, var(--color-bg) 80%, transparent);">←</button><button type="button" class="btn btn-ghost carousel-nav" onClick="{{ h.next }}" aria-label="{{ h.nextLabel }}" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); min-width: 36px; min-height: 36px; padding: 0; border-radius: 50%; background: color-mix(in srgb, var(--color-bg) 80%, transparent);">→</button><div role="group" aria-label="{{ h.dotsLabel }}" style="position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 5px 7px; border-radius: 999px; background: color-mix(in srgb, var(--color-bg) 76%, transparent);"><sc-for list="{{ h.dots }}" as="dot" hint-placeholder-count="3"><button type="button" class="carousel-dot" aria-label="{{ dot.aria }}" aria-pressed="{{ dot.active }}" onClick="{{ dot.go }}" style="width: 9px; height: 9px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: {{ dot.color }};"></button></sc-for></div></sc-if>
+                          <span class="sr-only" aria-live="polite" aria-atomic="true">{{ h.slideAnnouncement }}</span>
+                        </figure>
+                      </sc-if>
+                      <button type="button" onClick="{{ h.open }}" aria-label="{{ h.aria }}" style="display: block; width: 100%; border: 0; padding: 14px 15px 16px; text-align: left; background: transparent; cursor: pointer; font: inherit; color: inherit;"><span style="display: block; font-family: var(--font-heading); font-weight: 800; font-size: 20px; line-height: 1.2; letter-spacing: 0; text-wrap: pretty;">{{ h.destination }}</span><span style="display: block; margin-top: 5px; font-size: 12.5px; font-weight: 650; color: color-mix(in srgb, var(--color-text) 60%, transparent);">{{ h.meta }}</span><sc-if value="{{ h.hasCaption }}" hint-placeholder-val="{{ false }}"><span style="{{ h.captionStyle }}">{{ h.caption }}</span></sc-if></button>
+                    </article>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ noFavorites }}" hint-placeholder-val="{{ false }}"><p style="margin: 14px 0 0; font-size: 14.5px; line-height: 1.65; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ t.noFavorites }}</p></sc-if>
+            </section>
           </sc-if>
 
           <ul style="list-style: none; margin: 44px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px;">
@@ -347,7 +437,8 @@
         <div style="display: flex; align-items: center; gap: 10px;">
           <span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; background: {{ detail.color }};"></span>
           <span style="font-size: 11.5px; color: color-mix(in srgb, var(--color-text) 62%, transparent);">{{ detail.club }}</span>
-          <button type="button" class="btn btn-ghost" aria-label="{{ t.close }}" onClick="{{ close }}" style="margin-left: auto; min-width: 44px; min-height: 44px; font-size: 18px;">✕</button>
+          <button type="button" class="btn btn-ghost" aria-label="{{ detail.favoriteLabel }}" aria-pressed="{{ detail.favorite }}" onClick="{{ detail.toggleFavorite }}" style="margin-left: auto; min-width: 44px; min-height: 44px; font-size: 21px; color: {{ detail.favoriteColor }};">{{ detail.favoriteGlyph }}</button>
+          <button type="button" class="btn btn-ghost" aria-label="{{ t.close }}" onClick="{{ close }}" style="margin-left: 0; min-width: 44px; min-height: 44px; font-size: 18px;">✕</button>
         </div>
         <sc-if value="{{ detail.hasImage }}" hint-placeholder-val="{{ false }}">
           <figure class="hike-carousel" tabindex="0" onPointerDown="{{ detail.swipeStart }}" onKeyDown="{{ detail.keyDown }}" aria-roledescription="carousel" aria-label="{{ detail.carouselLabel }}" style="position: relative; margin: 18px 0 0; overflow: hidden; border-radius: 10px; background: color-mix(in srgb, var(--color-text) 5%, transparent); touch-action: pan-y;">
@@ -355,7 +446,7 @@
               <sc-for list="{{ detail.slides }}" as="slide" hint-placeholder-count="2">
                 <div aria-hidden="{{ slide.hidden }}" style="position: relative; flex: 0 0 100%; aspect-ratio: 4 / 5; overflow: hidden; background: color-mix(in srgb, var(--color-text) 5%, transparent);">
                   <sc-if value="{{ slide.showPlaceholder }}" hint-placeholder-val="{{ true }}">
-                    <span aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(110deg, transparent 20%, color-mix(in srgb, var(--color-text) 7%, transparent) 45%, transparent 70%); animation: skel 1.25s ease-in-out infinite;"></span>
+                  <span class="skeleton" aria-hidden="true" style="position: absolute; inset: 0;"></span>
                   </sc-if>
                   <img loading="lazy" sc-camel-on-load="{{ slide.imageLoad }}" sc-camel-on-error="{{ slide.imageError }}" sc-camel-src="{{ slide.imageUrl }}" alt="{{ slide.imageAlt }}" style="{{ slide.imageStyle }}">
                 </div>
@@ -397,7 +488,7 @@
             <p style="font-size: 10.5px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 48%, transparent); margin: 0 0 6px;">{{ t.sameDay }}</p>
             <div style="display: flex; flex-direction: column; gap: 2px;">
               <sc-for list="{{ detail.siblings }}" as="s" hint-placeholder-count="1">
-                <button type="button" onClick="{{ s.open }}" style="display: grid; grid-template-columns: 4px 1fr; gap: 12px; align-items: center; text-align: left; background: transparent; border: 0; padding: 10px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; font: inherit; color: inherit;" style-hover="background: color-mix(in srgb, var(--color-text) 7%, transparent);">
+                <button type="button" class="sibling-hike" onClick="{{ s.open }}" style="display: grid; grid-template-columns: 4px 1fr; gap: 12px; align-items: center; text-align: left; background: transparent; border: 0; padding: 10px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; font: inherit; color: inherit;">
                   <span aria-hidden="true" style="align-self: stretch; border-radius: 2px; background: {{ s.color }};"></span>
                   <span style="font-family: var(--font-heading); font-weight: 800; font-size: 16px; line-height: 1.25;">{{ s.destination }}</span>
                 </button>
@@ -427,7 +518,7 @@ class Component extends DCLogic {
   L = {
     mk: {
       app: "Следен Врв", tagline: "Тури од повеќе планинарски клубови",
-      view: "Приказ", calendar: "Календар", list: "Листа",
+      view: "Приказ", calendar: "Календар", list: "Листа", favorites: "Омилени", noFavorites: "Сè уште немате омилени тури.", favorite: "Додај во омилени", unfavorite: "Отстрани од омилени",
       prefs: "Јазик и тема", language: "Јазик", theme: "Тема",
       themeSystem: "Системска", themeLight: "Светла", themeDark: "Темна",
       loading: "Се вчитува", stale: "Податоците се од пред повеќе од два дена — може да има нови објави.",
@@ -453,7 +544,7 @@ class Component extends DCLogic {
     },
     en: {
       app: "Next Peak", tagline: "Hikes from three mountaineering clubs",
-      view: "View", calendar: "Calendar", list: "List",
+      view: "View", calendar: "Calendar", list: "List", favorites: "Favorites", noFavorites: "You have no favorite hikes yet.", favorite: "Add to favorites", unfavorite: "Remove from favorites",
       prefs: "Language and theme", language: "Language", theme: "Theme",
       themeSystem: "System", themeLight: "Light", themeDark: "Dark",
       loading: "Loading", stale: "This schedule is more than two days old — there may be newer posts.",
@@ -479,7 +570,7 @@ class Component extends DCLogic {
     }
   };
 
-  state = { status: "ok", data: null, view: "calendar", selected: null, mobile: false, systemDark: false, theme: "system", lang: "mk", copied: false, carouselIndex: 0, failedDetailImageKeys: {}, loadedDetailImageKeys: {}, failedFeedImageKeys: {}, loadedFeedImageKeys: {}, captionExpanded: false, headerPinned: false, monthOffset: 0, monthDrag: 0, monthDragging: false, monthAnimating: false, menuOpen: false };
+  state = { status: "ok", data: null, view: "calendar", selected: null, mobile: false, systemDark: false, theme: "system", lang: "mk", copied: false, favorites: {}, listImageIndexes: {}, carouselIndex: 0, failedDetailImageKeys: {}, loadedDetailImageKeys: {}, failedFeedImageKeys: {}, loadedFeedImageKeys: {}, captionExpanded: false, headerPinned: false, monthOffset: 0, monthDrag: 0, monthDragging: false, monthAnimating: false, menuOpen: false };
 
   componentDidMount() {
     const mq = window.matchMedia("(max-width: 860px)");
@@ -489,11 +580,13 @@ class Component extends DCLogic {
     mq.addEventListener("change", this._sync);
     this._stickyMq.addEventListener("change", this._sync);
     dk.addEventListener("change", this._sync);
-    let view = "calendar", theme = "system", lang = "mk";
+    let view = "calendar", theme = "system", lang = "mk", favorites = {};
     try {
-      const v = localStorage.getItem("nextpeak-view"); if (v === "calendar" || v === "list") view = v;
+      const v = localStorage.getItem("nextpeak-view"); if (v === "calendar" || v === "list" || v === "favorites") view = v;
       const th = localStorage.getItem("nextpeak-theme"); if (th === "light" || th === "dark" || th === "system") theme = th;
       const lg = localStorage.getItem("nextpeak-lang"); if (lg === "mk" || lg === "en") lang = lg;
+      const saved = JSON.parse(localStorage.getItem("nextpeak-favorites") || "[]");
+      if (Array.isArray(saved)) saved.forEach(id => { if (typeof id === "string" && id) favorites[id] = true; });
     } catch (e) {}
     const urlLang = new URLSearchParams(location.search).get("lang");
     if (urlLang === "mk" || urlLang === "en") lang = urlLang;
@@ -504,7 +597,7 @@ class Component extends DCLogic {
     window.addEventListener("keydown", this._onKey);
     this._onScroll = () => this.syncHeaderPinned();
     window.addEventListener("scroll", this._onScroll, { passive: true });
-    this.setState({ mobile: mq.matches, systemDark: dk.matches, view: this.props.defaultView || view, theme, lang, selected: this.hashId() }, () => {
+    this.setState({ mobile: mq.matches, systemDark: dk.matches, view: this.props.defaultView || view, theme, lang, favorites, selected: this.hashId() }, () => {
       this.applyEnv();
       this.syncPageScrollLock();
       this.syncHeaderPinned();
@@ -575,6 +668,14 @@ class Component extends DCLogic {
   normalizePayload(data) {
     return { ...data, hikes: data.hikes.map(h => ({ ...h, images: this.imageUrls(h) })) };
   }
+  toggleFavorite(id) {
+    this.setState(s => {
+      const favorites = { ...s.favorites };
+      if (favorites[id]) delete favorites[id]; else favorites[id] = true;
+      try { localStorage.setItem("nextpeak-favorites", JSON.stringify(Object.keys(favorites))); } catch (e) {}
+      return { favorites };
+    });
+  }
 
   sampleHikes() {
     return [
@@ -597,7 +698,7 @@ class Component extends DCLogic {
   }
 
   load() {
-    this.setState({ failedFeedImageKeys: {}, loadedFeedImageKeys: {}, ...this.resetDetailMedia() });
+    this.setState({ failedFeedImageKeys: {}, loadedFeedImageKeys: {}, listImageIndexes: {}, ...this.resetDetailMedia() });
     const src = this.props.dataSource || "live";
     const now = new Date();
     const gen = this.props.staleDemo ? new Date(now.getTime() - 76 * 3600e3) : new Date(now.getTime() - 4 * 60e3);
@@ -675,11 +776,15 @@ class Component extends DCLogic {
     if (total < 2) return;
     this.setState(s => ({ carouselIndex: (s.carouselIndex + direction + total) % total }));
   }
-  carouselKeyDown(e, total) {
+  moveListCarousel(id, direction, total) {
+    if (total < 2) return;
+    this.setState(s => ({ listImageIndexes: { ...s.listImageIndexes, [id]: ((s.listImageIndexes[id] || 0) + direction + total) % total } }));
+  }
+  carouselKeyDown(e, total, move) {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     e.preventDefault();
     e.stopPropagation();
-    this.moveCarousel(e.key === "ArrowRight" ? 1 : -1, total);
+    move(e.key === "ArrowRight" ? 1 : -1);
   }
   endCarouselSwipeListeners() {
     if (this._carouselSwipeMove) window.removeEventListener("pointermove", this._carouselSwipeMove);
@@ -689,7 +794,7 @@ class Component extends DCLogic {
     this._carouselSwipeUp = null;
     this._carouselSwipeCancel = null;
   }
-  carouselSwipeStart(e, total) {
+  carouselSwipeStart(e, total, move) {
     if (total < 2 || (e.button && e.button !== 0) || (e.target && e.target.closest && e.target.closest("button"))) return;
     this.endCarouselSwipeListeners();
     const target = e.currentTarget;
@@ -718,7 +823,7 @@ class Component extends DCLogic {
       this.endCarouselSwipeListeners();
       if (!swiping) return;
       const fast = Math.abs(lastDx) > 34 && Date.now() - startedAt < 260;
-      if (Math.abs(lastDx) > 54 || fast) this.moveCarousel(lastDx < 0 ? 1 : -1, total);
+      if (Math.abs(lastDx) > 54 || fast) move(lastDx < 0 ? 1 : -1);
     };
     this._carouselSwipeCancel = () => this.endCarouselSwipeListeners();
     window.addEventListener("pointermove", this._carouselSwipeMove, { passive: false });
@@ -1011,21 +1116,38 @@ class Component extends DCLogic {
       const c = this.club(h.club);
       const rel = this.relLabel(h.date);
       const caption = this.caption(h);
-      const images = this.imageUrls(h);
-      const imageUrl = images[0] || null;
-      const imageKey = imageUrl ? h.id + ":" + imageUrl : null;
+      const liveImages = this.imageUrls(h).filter(url => !st.failedFeedImageKeys[h.id + ":" + url]);
+      const activeImageIndex = Math.min(st.listImageIndexes[h.id] || 0, Math.max(0, liveImages.length - 1));
+      const slides = liveImages.map((imageUrl, index) => {
+        const imageKey = h.id + ":" + imageUrl;
+        const loaded = !!st.loadedFeedImageKeys[imageKey];
+        return {
+          imageUrl, imageAlt: L.imageAlt + " — " + L.imageSlide(index + 1, liveImages.length),
+          hidden: index !== activeImageIndex, showPlaceholder: !loaded,
+          imageStyle: "display:block;width:100%;height:100%;object-fit:cover;opacity:" + (loaded ? "1" : "0") + ";transition:opacity .16s ease;",
+          imageLoad: () => this.setState(s => ({ loadedFeedImageKeys: { ...s.loadedFeedImageKeys, [imageKey]: true } })),
+          imageError: () => this.setState(s => ({ failedFeedImageKeys: { ...s.failedFeedImageKeys, [imageKey]: true }, loadedFeedImageKeys: { ...s.loadedFeedImageKeys, [imageKey]: false } }))
+        };
+      });
+      const favorite = !!st.favorites[h.id];
       return {
         id: h.id, club: c.name, color: c.color, destination: this.dest(h),
         meta: rel + (h.time ? " · " + h.time + L.timeSuffix : ""),
         caption, hasCaption: !!caption.trim(),
         captionStyle: "display:-webkit-box;margin-top:12px;font-size:14px;line-height:1.65;white-space:pre-wrap;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:" + muted(70) + ";",
-        imageUrl, hasImage: !!imageUrl && !st.failedFeedImageKeys[imageKey], imageAlt: L.imageAlt,
-        imageCount: images.length, hasMoreImages: images.length > 1, imageCountLabel: L.imageCount(images.length),
-        imageStyle: "display:block;width:100%;height:auto;max-height:460px;object-fit:contain;opacity:" + (st.loadedFeedImageKeys[imageKey] ? "1" : "0") + ";transition:opacity .16s ease;",
-        imageLoad: () => this.setState(s => ({ loadedFeedImageKeys: { ...s.loadedFeedImageKeys, [imageKey]: true } })),
-        imageError: () => this.setState(s => ({ failedFeedImageKeys: { ...s.failedFeedImageKeys, [imageKey]: true }, loadedFeedImageKeys: { ...s.loadedFeedImageKeys, [imageKey]: false } })),
+        hasImage: slides.length > 0, slides, hasMultipleImages: slides.length > 1,
+        imageCount: slides.length, hasMoreImages: slides.length > 1, imageCountLabel: L.imageCount(slides.length),
+        trackOffset: -activeImageIndex * 100, carouselLabel: L.carouselLabel,
+        previousLabel: L.previousImage, nextLabel: L.nextImage, dotsLabel: L.carouselLabel,
+        slideAnnouncement: slides.length ? L.imageSlide(activeImageIndex + 1, slides.length) : "",
+        previous: () => this.moveListCarousel(h.id, -1, slides.length), next: () => this.moveListCarousel(h.id, 1, slides.length),
+        keyDown: (e) => this.carouselKeyDown(e, slides.length, direction => this.moveListCarousel(h.id, direction, slides.length)),
+        swipeStart: (e) => this.carouselSwipeStart(e, slides.length, direction => this.moveListCarousel(h.id, direction, slides.length)),
+        dots: slides.map((slide, index) => ({ active: index === activeImageIndex, color: index === activeImageIndex ? "var(--color-accent)" : "color-mix(in srgb, var(--color-text) 38%, transparent)", aria: L.imageSlide(index + 1, slides.length), go: () => this.setState(s => ({ listImageIndexes: { ...s.listImageIndexes, [h.id]: index } })) })),
+        favorite, favoriteGlyph: favorite ? "♥" : "♡", favoriteColor: favorite ? "var(--color-accent)" : muted(58), favoriteLabel: favorite ? L.unfavorite : L.favorite,
+        toggleFavorite: () => this.toggleFavorite(h.id),
         open: () => this.open(h.id),
-        aria: rel + ", " + this.dest(h) + ", " + c.name + (h.time ? ", " + L.departure + " " + h.time : "") + (images.length > 1 ? ", " + L.imageCount(images.length) : "")
+        aria: rel + ", " + this.dest(h) + ", " + c.name + (h.time ? ", " + L.departure + " " + h.time : "") + (slides.length > 1 ? ", " + L.imageCount(slides.length) : "")
       };
     };
     hikes.forEach(h => {
@@ -1036,6 +1158,7 @@ class Component extends DCLogic {
       else groupsMap[2].items.push(row(h));
     });
     const groups = groupsMap.filter(g => g.items.length);
+    const favoriteRows = hikes.filter(h => st.favorites[h.id]).map(row);
 
     const byDate = {};
     hikes.forEach(h => { (byDate[h.date] = byDate[h.date] || []).push(h); });
@@ -1127,8 +1250,11 @@ class Component extends DCLogic {
         previousLabel: L.previousImage, nextLabel: L.nextImage, dotsLabel: L.carouselLabel,
         slideAnnouncement: slides.length ? L.imageSlide(activeImageIndex + 1, slides.length) : "",
         previous: () => this.moveCarousel(-1, slides.length), next: () => this.moveCarousel(1, slides.length),
-        keyDown: (e) => this.carouselKeyDown(e, slides.length), swipeStart: (e) => this.carouselSwipeStart(e, slides.length),
+        keyDown: (e) => this.carouselKeyDown(e, slides.length, direction => this.moveCarousel(direction, slides.length)),
+        swipeStart: (e) => this.carouselSwipeStart(e, slides.length, direction => this.moveCarousel(direction, slides.length)),
         dots: slides.map((slide, index) => ({ active: index === activeImageIndex, color: index === activeImageIndex ? "var(--color-accent)" : "color-mix(in srgb, var(--color-text) 38%, transparent)", aria: L.imageSlide(index + 1, slides.length), go: () => this.setState({ carouselIndex: index }) })),
+        favorite: !!st.favorites[sel.id], favoriteGlyph: st.favorites[sel.id] ? "♥" : "♡", favoriteColor: st.favorites[sel.id] ? "var(--color-accent)" : muted(58), favoriteLabel: st.favorites[sel.id] ? L.unfavorite : L.favorite,
+        toggleFavorite: () => this.toggleFavorite(sel.id),
         siblings, hasSiblings: siblings.length > 0
       };
     }
@@ -1163,10 +1289,16 @@ class Component extends DCLogic {
       retry: () => this.load(),
       listChecked: st.view === "list",
       calChecked: st.view === "calendar",
+      favoritesChecked: st.view === "favorites",
       pickList: () => this.setView("list"),
       pickCal: () => this.setView("calendar"),
+      pickFavorites: () => this.setView("favorites"),
       showList: st.view === "list",
       showCal: st.view === "calendar",
+      showFavorites: st.view === "favorites",
+      favoriteRows,
+      hasFavorites: favoriteRows.length > 0,
+      noFavorites: favoriteRows.length === 0,
       menuOpen: st.menuOpen,
       toggleMenu: () => this.setState(s => ({ menuOpen: !s.menuOpen })),
       closeMenu: () => this.setState({ menuOpen: false }),
