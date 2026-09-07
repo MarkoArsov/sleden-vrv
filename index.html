@@ -88,6 +88,9 @@
     }
     .header-controls.is-stuck {
       border-bottom: 0;
+      isolation: isolate;
+      transform: translateZ(0);
+      will-change: transform;
     }
     .header-controls.is-stuck::after {
       content: "";
@@ -108,6 +111,14 @@
       box-shadow: 0 10px 24px rgba(0, 0, 0, .36), 0 1px 0 rgba(255, 255, 255, .09);
       z-index: 19;
       pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateZ(0);
+      will-change: opacity;
+    }
+    .sticky-header-surface.is-visible {
+      opacity: 1;
+      visibility: visible;
     }
     .view-switch {
       width: 100% !important;
@@ -130,7 +141,7 @@
       border-radius: 12px;
     }
     .detail-panel-header {
-      padding-top: max(14px, env(safe-area-inset-top)) !important;
+      padding-top: max(8px, env(safe-area-inset-top)) !important;
     }
     .detail-panel-body {
       padding-top: 18px !important;
@@ -148,7 +159,19 @@
   .view-switch .seg-opt:has(input:checked) + .seg-opt,
   .view-switch .seg-opt + .seg-opt:has(input:checked) { border-left-color: var(--color-accent); }
   .view-switch { border-radius: 12px; overflow: hidden; }
-  .favorite-filter { border-radius: 12px !important; }
+  .favorite-filter {
+    border: 1px solid var(--color-divider) !important;
+    border-radius: 12px !important;
+    background: transparent;
+  }
+  .favorite-filter[aria-pressed="true"] {
+    border-color: var(--color-accent) !important;
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  }
+  @keyframes prefs-menu-in {
+    from { opacity: 0; transform: translateY(-4px) scale(.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
   .view-icon { display: none; }
   .hike-carousel:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
   .hike-carousel .carousel-nav { opacity: 0; pointer-events: none; transition: opacity .16s ease; }
@@ -204,9 +227,9 @@
           <button type="button" class="btn btn-ghost favorite-filter" onClick="{{ toggleFavoritesOnly }}" aria-pressed="{{ favoritesOnly }}" aria-label="{{ favoritesFilterLabel }}" style="min-height: 38px; min-width: 40px; padding: 0; font-size: 20px; color: {{ favoritesFilterColor }};">{{ favoritesFilterGlyph }}</button>
           <button type="button" class="btn btn-ghost prefs-toggle" onClick="{{ toggleMenu }}" aria-haspopup="menu" aria-expanded="{{ menuOpen }}" aria-label="{{ t.prefs }}" style="min-height: 38px; min-width: 40px; font-size: 12px; letter-spacing: 0; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ prefsLabel }}</button>
           <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
-            <div>
-              <div onClick="{{ closeMenu }}" style="position: fixed; inset: 0; z-index: 30;"></div>
-              <div role="menu" style="position: absolute; top: 100%; right: 0; margin-top: 8px; z-index: 31; width: 214px; padding: 14px 16px 16px; background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: 12px; box-shadow: var(--shadow-md); animation: fadein .14s ease;">
+            <div style="position: absolute; inset: 0; pointer-events: none;">
+              <div onClick="{{ closeMenu }}" style="position: fixed; inset: 0; z-index: 30; pointer-events: auto;"></div>
+              <div role="menu" style="position: absolute; top: 100%; right: 0; margin-top: 8px; z-index: 31; width: 214px; padding: 14px 16px 16px; background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: 12px; box-shadow: var(--shadow-md); animation: prefs-menu-in .16s cubic-bezier(.2,.8,.2,1); transform-origin: top right; pointer-events: auto;">
                 <p style="margin: 0 0 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 48%, transparent);">{{ t.language }}</p>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                   <sc-for list="{{ langOptions }}" as="o" hint-placeholder-count="2">
@@ -226,9 +249,7 @@
         </div>
       </header>
 
-      <sc-if value="{{ headerPinned }}" hint-placeholder-val="{{ false }}">
-        <div class="sticky-header-surface" aria-hidden="true"></div>
-      </sc-if>
+      <div class="{{ stickyHeaderSurfaceClass }}" ref="{{ stickyHeaderSurfaceRef }}" aria-hidden="true"></div>
 
       <sc-if value="{{ isStale }}" hint-placeholder-val="{{ false }}">
         <p style="margin: 20px 0 0; font-size: 12.5px; font-weight: 650; line-height: 1.55; color: color-mix(in srgb, var(--color-text) 62%, transparent); border-left: 2px solid var(--color-accent); padding-left: 10px;">{{ t.stale }}</p>
@@ -433,10 +454,10 @@
 
   <sc-if value="{{ detail }}" hint-placeholder-val="{{ false }}">
     <aside role="dialog" aria-modal="{{ isMobile }}" aria-label="{{ t.detailLabel }}" ref="{{ panelRef }}" style="{{ panelStyle }}">
-      <div class="detail-panel-header" style="position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 14px 22px; background: var(--color-bg); border-bottom: 1px solid var(--color-divider); flex: none;">
-        <span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; background: {{ detail.color }};"></span>
-        <span style="font-size: 11.5px; color: color-mix(in srgb, var(--color-text) 62%, transparent);">{{ detail.club }}</span>
-        <button type="button" class="btn btn-ghost" aria-label="{{ detail.favoriteLabel }}" aria-pressed="{{ detail.favorite }}" onClick="{{ detail.toggleFavorite }}" style="margin-left: auto; min-width: 44px; min-height: 44px; font-size: 21px; color: {{ detail.favoriteColor }};">{{ detail.favoriteGlyph }}</button>
+      <div class="detail-panel-header" style="position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px 18px; background: var(--color-bg); border-bottom: 1px solid var(--color-divider); flex: none;">
+        <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: {{ detail.color }};"></span>
+        <span style="font-size: 11px; color: color-mix(in srgb, var(--color-text) 62%, transparent);">{{ detail.club }}</span>
+        <button type="button" class="btn btn-ghost" aria-label="{{ detail.favoriteLabel }}" aria-pressed="{{ detail.favorite }}" onClick="{{ detail.toggleFavorite }}" style="margin-left: auto; min-width: 36px; min-height: 36px; font-size: 19px; color: {{ detail.favoriteColor }};">{{ detail.favoriteGlyph }}</button>
       </div>
       <div class="detail-panel-body" ref="{{ panelBodyRef }}" style="padding: 18px 22px 40px; overflow-y: auto; flex: 1 1 auto; overscroll-behavior: contain; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y;">
         <sc-if value="{{ detail.hasImage }}" hint-placeholder-val="{{ false }}">
@@ -653,6 +674,8 @@ class Component extends DCLogic {
   syncHeaderPinned() {
     const sentinel = this._headerStickySentinel;
     const pinned = !!(this._stickyMq && this._stickyMq.matches && sentinel && sentinel.getBoundingClientRect().bottom <= this.stickyTop() + 0.5);
+    if (this._headerControls) this._headerControls.classList.toggle("is-stuck", pinned);
+    if (this._stickyHeaderSurface) this._stickyHeaderSurface.classList.toggle("is-visible", pinned);
     if (pinned !== this.state.headerPinned) this.setState({ headerPinned: pinned });
   }
 
@@ -796,7 +819,7 @@ class Component extends DCLogic {
   hikes() {
     const d = this.state.data;
     if (!d || !Array.isArray(d.hikes)) return [];
-    return d.hikes.slice().sort((a, b) => (a.date + (a.time || "99:99")).localeCompare(b.date + (b.time || "99:99")));
+    return d.hikes.filter(h => this.imageUrls(h).length > 0).sort((a, b) => (a.date + (a.time || "99:99")).localeCompare(b.date + (b.time || "99:99")));
   }
 
   open(id) {
@@ -1411,6 +1434,8 @@ class Component extends DCLogic {
       headerControlsClass: "header-controls" + (st.headerPinned ? " is-stuck" : ""),
       headerControlsRef: (el) => { this._headerControls = el; },
       headerStickySentinelRef: (el) => { this._headerStickySentinel = el; },
+      stickyHeaderSurfaceClass: "sticky-header-surface" + (st.headerPinned ? " is-visible" : ""),
+      stickyHeaderSurfaceRef: (el) => { this._stickyHeaderSurface = el; },
       headerPinned: st.headerPinned,
       langOptions: [
         { label: "Македонски", checked: st.lang === "mk", pick: () => this.setLang("mk") },

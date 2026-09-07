@@ -14,9 +14,19 @@ jobs:
         env:
           EXEC_URL: ${{ secrets.HIKES_EXEC_URL }}
         run: |
-          curl -sL --fail --retry 3 "${EXEC_URL}?refresh=1" -o hikes.new.json
-          python3 -c "import json,sys; d=json.load(open('hikes.new.json')); sys.exit(0 if isinstance(d.get('hikes'), list) else 1)"
-          mv hikes.new.json hikes.json
+          started_at="$(date -u +%s)"
+          curl -sL --fail --retry 3 "${EXEC_URL}?refresh=1" -o /dev/null
+          for attempt in $(seq 1 60); do
+            curl -sL --fail --retry 3 "${EXEC_URL}?_=$(date +%s%N)" -o hikes.new.json
+            python3 -c "import json,sys; d=json.load(open('hikes.new.json')); sys.exit(0 if isinstance(d.get('hikes'), list) else 1)"
+            if python3 -c "import datetime,json,sys; d=json.load(open('hikes.new.json')); generated=d.get('generatedAt'); fresh=generated and datetime.datetime.fromisoformat(generated.replace('Z','+00:00')).timestamp() >= int(sys.argv[1]); print('Waiting for a post-refresh payload; generatedAt=' + str(generated)) if not fresh else None; sys.exit(0 if fresh else 1)" "$started_at"; then
+              mv hikes.new.json hikes.json
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Timed out waiting for a payload generated after the refresh request."
+          exit 1
 
       - name: Commit if changed
         run: |
