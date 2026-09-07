@@ -1,7 +1,7 @@
 name: sync-hikes
 on:
   schedule:
-    - cron: '30 6 * * *'   # UTC — after the upstream data is written
+    - cron: '30 12 * * *'  # UTC — after the upstream generator's daily run
   workflow_dispatch:
 permissions:
   contents: write
@@ -10,23 +10,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch hikes
+      - name: Fetch latest generated hikes
         env:
           EXEC_URL: ${{ secrets.HIKES_EXEC_URL }}
         run: |
-          started_at="$(date -u +%s)"
-          curl -sL --fail --retry 3 "${EXEC_URL}?refresh=1" -o /dev/null
-          for attempt in $(seq 1 60); do
-            curl -sL --fail --retry 3 "${EXEC_URL}?_=$(date +%s%N)" -o hikes.new.json
-            python3 -c "import json,sys; d=json.load(open('hikes.new.json')); sys.exit(0 if isinstance(d.get('hikes'), list) else 1)"
-            if python3 -c "import datetime,json,sys; d=json.load(open('hikes.new.json')); generated=d.get('generatedAt'); fresh=generated and datetime.datetime.fromisoformat(generated.replace('Z','+00:00')).timestamp() >= int(sys.argv[1]); print('Waiting for a post-refresh payload; generatedAt=' + str(generated)) if not fresh else None; sys.exit(0 if fresh else 1)" "$started_at"; then
-              mv hikes.new.json hikes.json
+          curl -sL --fail --retry 3 "${EXEC_URL}?refresh=1&_=$(date +%s%N)" -o hikes.new.json
+          python3 -c "import json,sys; d=json.load(open('hikes.new.json')); sys.exit(0 if isinstance(d.get('hikes'), list) else 1)"
+          if python3 - <<'PY'
+          from datetime import datetime
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+          import json
+
+          candidate = json.load(open("hikes.new.json"))
+          generated = candidate.get("generatedAt")
+          today = candidate.get("today")
+          try:
+              current = datetime.fromisoformat(generated.replace("Z", "+00:00")).astimezone(ZoneInfo("Europe/Skopje"))
+          except (AttributeError, ValueError):
+              print("Refusing payload without a valid generatedAt timestamp.")
+              raise SystemExit(1)
+
+          if current.date().isoformat() != today:
+              print("Refusing payload not generated on the server's current day; generatedAt=" + str(generated) + ", today=" + str(today))
+              raise SystemExit(1)
+
+          previous = None
+          if Path("hikes.json").exists():
+              old = json.load(open("hikes.json")).get("generatedAt")
+              if old:
+                  previous = datetime.fromisoformat(old.replace("Z", "+00:00"))
+          if previous and current <= previous:
+              print("hikes.json already contains this generated snapshot.")
+              raise SystemExit(2)
+
+          print("Accepting generated payload from " + str(generated))
+          PY
+          then
+            mv hikes.new.json hikes.json
+          else
+            result=$?
+            if [ "$result" -eq 2 ]; then
               exit 0
             fi
-            sleep 15
-          done
-          echo "Timed out waiting for a payload generated after the refresh request."
-          exit 1
+            exit "$result"
+          fi
 
       - name: Commit if changed
         run: |
