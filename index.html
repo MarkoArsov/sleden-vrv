@@ -72,7 +72,7 @@
       margin-left: 0 !important;
       flex: none !important;
       display: grid !important;
-      grid-template-columns: minmax(0, 1fr) max-content max-content;
+      grid-template-columns: minmax(0, 1fr) max-content;
       align-items: stretch !important;
       justify-content: stretch !important;
       gap: 6px !important;
@@ -82,12 +82,13 @@
       margin-inline: -20px !important;
       padding: 8px 20px 10px;
       width: calc(100% + 40px) !important;
-      background: var(--color-bg);
+      background: transparent;
       border-bottom: 0;
       box-shadow: none;
     }
     .header-controls.is-stuck {
       border-bottom: 0;
+      background: var(--color-bg);
       isolation: isolate;
       transform: translateZ(0);
       will-change: transform;
@@ -133,13 +134,6 @@
       padding-inline: 10px;
       text-align: center;
     }
-    .prefs-toggle {
-      min-width: 44px !important;
-      min-height: 40px !important;
-      padding-inline: 10px !important;
-      border: 1px solid var(--color-divider);
-      border-radius: 12px;
-    }
     .detail-panel-header {
       padding-top: max(8px, env(safe-area-inset-top)) !important;
     }
@@ -159,6 +153,18 @@
   .view-switch .seg-opt:has(input:checked) + .seg-opt,
   .view-switch .seg-opt + .seg-opt:has(input:checked) { border-left-color: var(--color-accent); }
   .view-switch { border-radius: 12px; overflow: hidden; }
+  .brand-block { position: relative; }
+  .app-prefs { position: absolute; top: 0; right: 0; }
+  .prefs-toggle {
+    display: grid;
+    place-items: center;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    border: 1px solid var(--color-divider);
+    border-radius: 12px;
+  }
+  .prefs-toggle svg { width: 18px; height: 18px; }
   .favorite-filter {
     border: 1px solid var(--color-divider) !important;
     border-radius: 12px !important;
@@ -217,6 +223,29 @@
           </svg>
           <h1 style="font-size: 28px; margin: 7px 0 2px; letter-spacing: 0; font-weight: 800; line-height: 1.02;">{{ appName }}</h1>
           <p style="margin: 0; font-size: 12px; font-weight: 650; line-height: 1.4; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ tagline }}</p>
+          <div class="app-prefs">
+            <button type="button" class="btn btn-ghost prefs-toggle" onClick="{{ toggleMenu }}" aria-haspopup="menu" aria-expanded="{{ menuOpen }}" aria-label="{{ t.prefs }}" style="color: color-mix(in srgb, var(--color-text) 58%, transparent);"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 17h16M9 7a2 2 0 1 0 0 .01M15 17a2 2 0 1 0 0 .01"></path></svg></button>
+            <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="position: absolute; inset: 0; pointer-events: none;">
+                <div onClick="{{ closeMenu }}" style="position: fixed; inset: 0; z-index: 30; pointer-events: auto;"></div>
+                <div role="menu" style="position: absolute; top: 100%; right: 0; margin-top: 8px; z-index: 31; width: 214px; padding: 14px 16px 16px; background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: 12px; box-shadow: var(--shadow-md); animation: prefs-menu-in .16s cubic-bezier(.2,.8,.2,1); transform-origin: top right; pointer-events: auto;">
+                  <p style="margin: 0 0 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 48%, transparent);">{{ t.language }}</p>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <sc-for list="{{ langOptions }}" as="o" hint-placeholder-count="2">
+                      <label class="radio" style="min-height: 32px;"><input type="radio" name="lang" checked="{{ o.checked }}" onChange="{{ o.pick }}"><span class="dot"></span>{{ o.label }}</label>
+                    </sc-for>
+                  </div>
+                  <div style="height: 1px; background: var(--color-divider); margin: 14px 0;"></div>
+                  <p style="margin: 0 0 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 48%, transparent);">{{ t.theme }}</p>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <sc-for list="{{ themeOptions }}" as="o" hint-placeholder-count="3">
+                      <label class="radio" style="min-height: 32px;"><input type="radio" name="theme" checked="{{ o.checked }}" onChange="{{ o.pick }}"><span class="dot"></span>{{ o.label }}</label>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
         </div>
         <span class="header-sticky-sentinel" ref="{{ headerStickySentinelRef }}" aria-hidden="true"></span>
         <div class="{{ headerControlsClass }}" ref="{{ headerControlsRef }}" style="margin-left: auto; flex: 1 1 220px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative;">
@@ -225,27 +254,6 @@
             <label class="seg-opt" style="min-height: 38px;"><input type="radio" name="view" aria-label="{{ t.list }}" checked="{{ listChecked }}" onChange="{{ pickList }}"><span class="view-label">{{ t.list }}</span><svg class="view-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path></svg></label>
           </div>
           <button type="button" class="btn btn-ghost favorite-filter" onClick="{{ toggleFavoritesOnly }}" aria-pressed="{{ favoritesOnly }}" aria-label="{{ favoritesFilterLabel }}" style="min-height: 38px; min-width: 40px; padding: 0; font-size: 20px; color: {{ favoritesFilterColor }};">{{ favoritesFilterGlyph }}</button>
-          <button type="button" class="btn btn-ghost prefs-toggle" onClick="{{ toggleMenu }}" aria-haspopup="menu" aria-expanded="{{ menuOpen }}" aria-label="{{ t.prefs }}" style="min-height: 38px; min-width: 40px; font-size: 12px; letter-spacing: 0; color: color-mix(in srgb, var(--color-text) 58%, transparent);">{{ prefsLabel }}</button>
-          <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
-            <div style="position: absolute; inset: 0; pointer-events: none;">
-              <div onClick="{{ closeMenu }}" style="position: fixed; inset: 0; z-index: 30; pointer-events: auto;"></div>
-              <div role="menu" style="position: absolute; top: 100%; right: 0; margin-top: 8px; z-index: 31; width: 214px; padding: 14px 16px 16px; background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: 12px; box-shadow: var(--shadow-md); animation: prefs-menu-in .16s cubic-bezier(.2,.8,.2,1); transform-origin: top right; pointer-events: auto;">
-                <p style="margin: 0 0 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 48%, transparent);">{{ t.language }}</p>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                  <sc-for list="{{ langOptions }}" as="o" hint-placeholder-count="2">
-                    <label class="radio" style="min-height: 32px;"><input type="radio" name="lang" checked="{{ o.checked }}" onChange="{{ o.pick }}"><span class="dot"></span>{{ o.label }}</label>
-                  </sc-for>
-                </div>
-                <div style="height: 1px; background: var(--color-divider); margin: 14px 0;"></div>
-                <p style="margin: 0 0 8px; font-size: 10.5px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; color: color-mix(in srgb, var(--color-text) 48%, transparent);">{{ t.theme }}</p>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                  <sc-for list="{{ themeOptions }}" as="o" hint-placeholder-count="3">
-                    <label class="radio" style="min-height: 32px;"><input type="radio" name="theme" checked="{{ o.checked }}" onChange="{{ o.pick }}"><span class="dot"></span>{{ o.label }}</label>
-                  </sc-for>
-                </div>
-              </div>
-            </div>
-          </sc-if>
         </div>
       </header>
 
