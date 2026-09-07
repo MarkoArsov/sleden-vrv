@@ -1,7 +1,7 @@
 name: sync-hikes
 on:
   schedule:
-    - cron: '30 12 * * *'  # UTC — after the upstream generator's daily run
+    - cron: '0 8 * * *'    # UTC — 10:00 Europe/Skopje in daylight-saving time
   workflow_dispatch:
 permissions:
   contents: write
