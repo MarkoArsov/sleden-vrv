@@ -310,8 +310,6 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;dataSource&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sample&quot;,&quot;dense&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;live&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Демо податоци&quot;},&quot;defaultView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;calendar&quot;,&quot;list&quot;],&quot;default&quot;:&quot;calendar&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Приказ&quot;},&quot;staleDemo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Демо податоци&quot;}}">
 class Component extends DCLogic {
-  API_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTLtcsEkLOLlMNSXC-TyWq9N7OkPZZHS9DfdMRZliourocwmPAPm0a1i1fxixSLQ3KqhmgY8pjTckkATUL8JnFYdc1f6w0n1sFkP0TT5HOarCbOb4qQpbUwljWV35nRgd3rBkLMyW54OscfLEkdAvHOvOU2di9IRJYuk39Jt4ODk7cJC227eJQvJRp_7PKWMTnnDDtLET89XMQeaZ8ThxNN_uBKZpRqXUqhTyrV8v2ZRqlVPvbGDiDvXqelVcbmKeLpq_fUkamg9xo73o9Ezd_qQ_fGoA&lib=MVMzfW7giOr253XPEZ6bqqgJ2S0OvVxq0";
-
   CLUBS = {
     psk_stratus: { name: "ПСК Стратус", nameEn: "PSK Stratus", light: "#96671a", dark: "#eebc76" },
     ilovehikingmacedonia: { name: "I Love Hiking Macedonia", nameEn: "I Love Hiking Macedonia", light: "#1f6f66", dark: "#83cfc2" },
@@ -468,7 +466,10 @@ class Component extends DCLogic {
     if (src === "dense") return this.setState({ status: "ok", data: wrap(this.denseHikes()) });
     if (src === "live") {
       this.setState({ status: "loading", data: null });
-      fetch(this.API_URL).then(r => r.json()).then(d => {
+      fetch("./hikes.json").then(r => {
+        if (!r.ok) throw new Error("fetch failed");
+        return r.json();
+      }).then(d => {
         if (!d || !Array.isArray(d.hikes)) throw new Error("malformed");
         this.setState({ status: "ok", data: d });
       }).catch(() => this.setState({ status: "error", data: null }));

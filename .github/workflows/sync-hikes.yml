@@ -1,0 +1,27 @@
+name: sync-hikes
+on:
+  schedule:
+    - cron: '30 6 * * *'   # UTC — after the upstream data is written
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch hikes
+        env:
+          EXEC_URL: ${{ secrets.HIKES_EXEC_URL }}
+        run: |
+          curl -sL --fail --retry 3 "${EXEC_URL}?refresh=1" -o hikes.new.json
+          python3 -c "import json,sys; d=json.load(open('hikes.new.json')); sys.exit(0 if isinstance(d.get('hikes'), list) else 1)"
+          mv hikes.new.json hikes.json
+
+      - name: Commit if changed
+        run: |
+          git config user.name "hikes-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add hikes.json
+          git diff --staged --quiet || git commit -m "sync hikes $(date -I)"
+          git push
