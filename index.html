@@ -135,7 +135,7 @@
       text-align: center;
     }
     .detail-panel-header {
-      padding-top: max(8px, env(safe-area-inset-top)) !important;
+      padding-top: max(6px, env(safe-area-inset-top)) !important;
     }
     .detail-panel-body {
       padding-top: 18px !important;
@@ -153,6 +153,7 @@
   .view-switch .seg-opt:has(input:checked) + .seg-opt,
   .view-switch .seg-opt + .seg-opt:has(input:checked) { border-left-color: var(--color-accent); }
   .view-switch { border-radius: 12px; overflow: hidden; }
+  .detail-panel-header { box-shadow: 0 10px 24px rgba(0, 0, 0, .36), 0 1px 0 rgba(255, 255, 255, .09); }
   .brand-block { position: relative; }
   .app-prefs { position: absolute; top: 0; right: 0; }
   .prefs-toggle {
@@ -462,10 +463,10 @@
 
   <sc-if value="{{ detail }}" hint-placeholder-val="{{ false }}">
     <aside role="dialog" aria-modal="{{ isMobile }}" aria-label="{{ t.detailLabel }}" ref="{{ panelRef }}" style="{{ panelStyle }}">
-      <div class="detail-panel-header" style="position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px 18px; background: var(--color-bg); border-bottom: 1px solid var(--color-divider); flex: none;">
-        <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: {{ detail.color }};"></span>
-        <span style="font-size: 11px; color: color-mix(in srgb, var(--color-text) 62%, transparent);">{{ detail.club }}</span>
-        <button type="button" class="btn btn-ghost" aria-label="{{ detail.favoriteLabel }}" aria-pressed="{{ detail.favorite }}" onClick="{{ detail.toggleFavorite }}" style="margin-left: auto; min-width: 36px; min-height: 36px; font-size: 19px; color: {{ detail.favoriteColor }};">{{ detail.favoriteGlyph }}</button>
+      <div class="detail-panel-header" style="position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 7px; padding: 6px 16px; background: var(--color-bg); border-bottom: 1px solid var(--color-divider); flex: none;">
+        <span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: {{ detail.color }};"></span>
+        <span style="font-size: 10.5px; color: color-mix(in srgb, var(--color-text) 62%, transparent);">{{ detail.club }}</span>
+        <button type="button" class="btn btn-ghost" aria-label="{{ detail.favoriteLabel }}" aria-pressed="{{ detail.favorite }}" onClick="{{ detail.toggleFavorite }}" style="margin-left: auto; min-width: 32px; min-height: 32px; font-size: 18px; color: {{ detail.favoriteColor }};">{{ detail.favoriteGlyph }}</button>
       </div>
       <div class="detail-panel-body" ref="{{ panelBodyRef }}" style="padding: 18px 22px 40px; overflow-y: auto; flex: 1 1 auto; overscroll-behavior: contain; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y;">
         <sc-if value="{{ detail.hasImage }}" hint-placeholder-val="{{ false }}">
