@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sleden-vrv-v6';
+const CACHE_NAME = 'sleden-vrv-v7';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,7 +7,7 @@ const APP_SHELL = [
   './apple-touch-icon.png',
   './icon-512.png',
   './manifest.webmanifest',
-  './pwa.js?v=6',
+  './pwa.js?v=7',
   './hikes.json',
   './_ds/classical-668ace92-beca-41c2-b77b-3915a45aeb50/styles.css',
   './_ds/classical-668ace92-beca-41c2-b77b-3915a45aeb50/_ds_bundle.js'
@@ -39,20 +39,41 @@ async function networkFirst(request) {
   }
 }
 
-async function notifyHikesUpdated() {
+async function notifyHikesRevalidated(generatedAt, changed) {
   const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-  clients.forEach((client) => client.postMessage({ type: 'hikes-updated' }));
+  clients.forEach((client) => {
+    client.postMessage({ type: 'hikes-revalidated', generatedAt, changed });
+    // Allows the already-deployed registration script to refresh its tab as
+    // soon as this worker claims it.
+    if (changed) client.postMessage({ type: 'hikes-updated' });
+  });
+}
+
+async function generatedAt(response) {
+  if (!response) return null;
+  try {
+    const payload = await response.clone().json();
+    return typeof payload.generatedAt === 'string' ? payload.generatedAt : null;
+  } catch (_) {
+    return null;
+  }
 }
 
 async function staleWhileRevalidate(request, event) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
-  const refresh = fetch(request).then(async (response) => {
+  console.info('[Sleden Vrv] hikes served:', await generatedAt(cached));
+
+  // `reload` revalidates through the browser HTTP cache. Without it, a fresh
+  // Cache Storage entry could be "updated" with the same stale HTTP response.
+  const refresh = fetch(request, { cache: 'reload' }).then(async (response) => {
     if (!response || !response.ok) return response;
     const previous = await cache.match(request);
     const changed = !previous || await previous.clone().text() !== await response.clone().text();
+    const revalidatedAt = await generatedAt(response);
+    console.info('[Sleden Vrv] hikes revalidated:', revalidatedAt);
     await cache.put(request, response.clone());
-    if (changed && previous) await notifyHikesUpdated();
+    await notifyHikesRevalidated(revalidatedAt, changed && !!previous);
     return response;
   });
   event.waitUntil(refresh.catch(() => {}));

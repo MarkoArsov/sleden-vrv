@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <link rel="manifest" href="./manifest.webmanifest">
 <script src="./support.js"></script>
-<script src="./pwa.js?v=6" defer></script>
+<script src="./pwa.js?v=7" defer></script>
 </head>
 <body>
 <x-dc>
@@ -769,6 +769,7 @@ class Component extends DCLogic {
       }).then(d => {
         if (!d || !Array.isArray(d.hikes)) throw new Error("malformed");
         const data = this.normalizePayload(d);
+        console.info("[Sleden Vrv] hikes loaded:", data.generatedAt);
         this.setState({ status: "ok", data, showPast: this.defaultShowPast(data) });
       }).catch(() => { if (!background) this.setState({ status: "error", data: null }); });
       return;
