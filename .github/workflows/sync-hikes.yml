@@ -1,7 +1,9 @@
 name: sync-hikes
 on:
   schedule:
-    - cron: '0 8 * * *'    # UTC — 10:00 Europe/Skopje in daylight-saving time
+    # Avoid GitHub Actions' busiest top-of-hour queue. The later run is a
+    # fallback if the upstream scrape finishes late or the morning run is delayed.
+    - cron: '17 8,14 * * *' # UTC — 10:17 and 16:17 Europe/Skopje in daylight-saving time
   workflow_dispatch:
 permissions:
   contents: write
