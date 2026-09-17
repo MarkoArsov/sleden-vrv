@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sleden-vrv-v7';
+const CACHE_NAME = 'sleden-vrv-v8';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,12 +7,13 @@ const APP_SHELL = [
   './apple-touch-icon.png',
   './icon-512.png',
   './manifest.webmanifest',
-  './pwa.js?v=7',
+  './pwa.js?v=8',
   './hikes.json',
   './_ds/classical-668ace92-beca-41c2-b77b-3915a45aeb50/styles.css',
   './_ds/classical-668ace92-beca-41c2-b77b-3915a45aeb50/_ds_bundle.js'
 ];
-const HIKES_PATH = new URL('./hikes.json', self.location.href).pathname;
+const HIKES_URL = new URL('./hikes.json', self.location.href).href;
+const HIKES_PATH = new URL(HIKES_URL).pathname;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
@@ -61,18 +62,23 @@ async function generatedAt(response) {
 
 async function staleWhileRevalidate(request, event) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
+  // Query strings deliberately bypass the CDN cache. Cache all of those
+  // requests under one stable key so offline support stays compact.
+  const cacheKey = new Request(HIKES_URL);
+  const cached = await cache.match(cacheKey);
   console.info('[Sleden Vrv] hikes served:', await generatedAt(cached));
 
-  // `reload` revalidates through the browser HTTP cache. Without it, a fresh
-  // Cache Storage entry could be "updated" with the same stale HTTP response.
-  const refresh = fetch(request, { cache: 'reload' }).then(async (response) => {
+  // The unique URL bypasses an intermediary that may otherwise return an old
+  // GitHub Pages asset for the canonical hikes.json URL.
+  const freshUrl = new URL(HIKES_URL);
+  freshUrl.searchParams.set('_', Date.now().toString());
+  const refresh = fetch(freshUrl, { cache: 'no-store' }).then(async (response) => {
     if (!response || !response.ok) return response;
-    const previous = await cache.match(request);
+    const previous = await cache.match(cacheKey);
     const changed = !previous || await previous.clone().text() !== await response.clone().text();
     const revalidatedAt = await generatedAt(response);
     console.info('[Sleden Vrv] hikes revalidated:', revalidatedAt);
-    await cache.put(request, response.clone());
+    await cache.put(cacheKey, response.clone());
     await notifyHikesRevalidated(revalidatedAt, changed && !!previous);
     return response;
   });

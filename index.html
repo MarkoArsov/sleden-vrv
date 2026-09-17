@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <link rel="manifest" href="./manifest.webmanifest">
 <script src="./support.js"></script>
-<script src="./pwa.js?v=7" defer></script>
+<script src="./pwa.js?v=8" defer></script>
 </head>
 <body>
 <x-dc>
@@ -144,6 +144,11 @@
   }
   @media (display-mode: standalone) {
     html { background: var(--color-bg); }
+    .app-page { padding-top: max(32px, calc(env(safe-area-inset-top) + 12px)) !important; }
+  }
+  @media (max-width: 700px) and (display-mode: standalone) {
+    .header-controls { top: calc(env(safe-area-inset-top) + 12px); }
+    .sticky-header-surface { height: calc(env(safe-area-inset-top) + 70px); }
   }
   .view-switch:has(input:checked) { border-color: var(--color-accent); }
   .view-switch .seg-opt:has(input:checked) {
@@ -217,7 +222,7 @@
 </helmet>
 <div style="min-height: 100vh; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); font-variant-numeric: tabular-nums;">
   <div style="{{ pageStyle }}">
-    <div style="max-width: 620px; margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 20px max(110px, calc(90px + env(safe-area-inset-bottom)));">
+    <div class="app-page" style="max-width: 620px; margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 20px max(110px, calc(90px + env(safe-area-inset-bottom)));">
 
       <header class="app-header" style="display: flex; align-items: flex-end; gap: 10px 12px; flex-wrap: wrap;">
         <div class="brand-block">
@@ -763,7 +768,9 @@ class Component extends DCLogic {
     if (src === "dense") { const data = wrap(this.denseHikes()); return this.setState({ status: "ok", data, showPast: this.defaultShowPast(data) }); }
     if (src === "live") {
       if (!background) this.setState({ status: "loading", data: null });
-      fetch("./hikes.json").then(r => {
+      // The query makes every foreground load reach the current GitHub Pages
+      // asset. The service worker keeps one canonical offline copy.
+      fetch("./hikes.json?_=" + Date.now(), { cache: "no-store" }).then(r => {
         if (!r.ok) throw new Error("fetch failed");
         return r.json();
       }).then(d => {
