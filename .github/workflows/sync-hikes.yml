@@ -2,7 +2,7 @@ name: sync-hikes
 on:
   schedule:
     # GitHub may delay scheduled runs. Each run also retries stale responses.
-    - cron: '23 6,9,12,15 * * *'
+    - cron: '45 3-21 * * *'
   workflow_dispatch:
 permissions:
   contents: write
