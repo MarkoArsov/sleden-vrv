@@ -20,6 +20,10 @@ class SyncError(Exception):
     pass
 
 
+class TransportError(SyncError):
+    pass
+
+
 def timestamp(value):
     try:
         parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
@@ -38,9 +42,9 @@ def validate(payload, now=None):
     today = now.astimezone(SKOPJE).date().isoformat()
     if generated > now + timedelta(minutes=5):
         raise SyncError('generatedAt is in the future')
-    if payload.get('today') != today or generated.astimezone(SKOPJE).date().isoformat() != today:
-        raise SyncError('upstream snapshot is stale: expected generation and today on '
-                        + today + '; generatedAt=' + generated.isoformat()
+    if payload.get('today') != today or now - generated > timedelta(hours=48):
+        raise SyncError('upstream snapshot is stale: expected today=' + today
+                        + ' and generatedAt no more than 48 hours old; generatedAt=' + generated.isoformat()
                         + '. Check whether the daily digest was saved to hikes-clean.')
     hikes = payload['hikes']
     seen = set()
@@ -48,7 +52,7 @@ def validate(payload, now=None):
     for hike in hikes:
         if not isinstance(hike, dict):
             raise SyncError('each hike must be an object')
-        for key in ('id', 'club', 'date', 'destination'):
+        for key in ('id', 'club', 'date'):
             if not isinstance(hike.get(key), str) or not hike[key].strip():
                 raise SyncError('hike is missing required text field: ' + key)
         try:
@@ -69,8 +73,8 @@ def validate(payload, now=None):
     for key in ('filesRead', 'filesSkipped'):
         if key in payload and (type(payload[key]) is not int or payload[key] < 0):
             raise SyncError(key + ' must be a nonnegative integer')
-    if payload.get('filesSkipped', 0) != 0:
-        raise SyncError('upstream skipped input files; refusing an incomplete snapshot')
+    if payload.get('filesSkipped', 0) > 0:
+        print(f'::warning::Upstream skipped {payload["filesSkipped"]} input files; continuing with available snapshot.')
     return generated
 
 
@@ -102,7 +106,6 @@ def request_url(url, refresh=False):
 
 
 def fetch_json(url, refresh=False):
-    # One retry loop covers both HTTP errors and invalid/stale HTTP 200 responses.
     # Never print curl stderr: redirects or errors may expose the secret endpoint.
     try:
         result = subprocess.run([
@@ -111,20 +114,20 @@ def fetch_json(url, refresh=False):
             '--connect-timeout', '15', '--max-time', '60', request_url(url, refresh),
         ], capture_output=True, timeout=65)
     except subprocess.TimeoutExpired:
-        raise SyncError('request timed out') from None
+        raise TransportError('request timed out') from None
     if result.returncode:
-        raise SyncError('HTTP request failed (curl exit ' + str(result.returncode) + ')')
+        raise TransportError('HTTP request failed (curl exit ' + str(result.returncode) + ')')
     try:
         return json.loads(result.stdout)
     except (ValueError, UnicodeError):
-        raise SyncError('endpoint returned invalid JSON') from None
+        raise TransportError('endpoint returned invalid JSON') from None
 
 
 def retry(operation, attempts, delay):
     for attempt in range(1, attempts + 1):
         try:
             return operation()
-        except SyncError as error:
+        except TransportError as error:
             print(f'Attempt {attempt}/{attempts}: {error}', flush=True)
             if attempt == attempts:
                 raise

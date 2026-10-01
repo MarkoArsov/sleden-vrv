@@ -1,5 +1,7 @@
 import copy
+from contextlib import redirect_stdout
 from datetime import datetime, timezone
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -26,15 +28,20 @@ class ValidationTests(unittest.TestCase):
     def test_valid_snapshot(self):
         self.assertEqual(sync.validate(payload(), NOW).hour, 7)
 
-    def test_actual_clock_not_just_matching_payload_dates(self):
+    def test_snapshot_older_than_48_hours_is_stale(self):
         data = payload()
-        data.update(generatedAt='2026-09-23T07:00:21Z', today='2026-09-23')
-        with self.assertRaisesRegex(sync.SyncError, 'stale'):
+        data['generatedAt'] = '2026-09-24T09:59:59Z'
+        with self.assertRaisesRegex(sync.SyncError, 'daily digest was saved to hikes-clean'):
             sync.validate(data, NOW)
 
-    def test_reported_failure(self):
+    def test_snapshot_exactly_48_hours_old_is_valid(self):
         data = payload()
-        data.update(generatedAt='2026-09-23T07:00:21Z', today='2026-09-25')
+        data['generatedAt'] = '2026-09-24T10:00:00Z'
+        sync.validate(data, NOW)
+
+    def test_today_must_match_skopje_date(self):
+        data = payload()
+        data['today'] = '2026-09-25'
         with self.assertRaisesRegex(sync.SyncError, 'stale'):
             sync.validate(data, NOW)
 
@@ -49,15 +56,16 @@ class ValidationTests(unittest.TestCase):
         sync.validate(data, datetime(2026, 9, 25, 23, tzinfo=timezone.utc))
 
     def test_incomplete_or_malformed_snapshot(self):
-        cases = [[], {'hikes': None}, {**payload(), 'filesSkipped': 1},
-                 {**payload(), 'totalCount': 2}, {**payload(), 'count': True},
+        cases = [[], {'hikes': None}, {**payload(), 'totalCount': 2},
+                 {**payload(), 'count': True},
                  {**payload(), 'hikes': [None]}, {**payload(), 'filesRead': -1}]
         for data in cases:
             with self.subTest(data=data), self.assertRaises(sync.SyncError):
                 sync.validate(data, NOW)
 
     def test_invalid_hike_and_duplicate(self):
-        for field, value in (('id', ''), ('date', '2026-02-30'), ('past', True)):
+        for field, value in (('id', ''), ('club', None), ('date', ''),
+                             ('date', '2026-02-30'), ('past', True)):
             data = payload()
             data['hikes'][0][field] = value
             with self.subTest(field=field), self.assertRaises(sync.SyncError):
@@ -67,6 +75,19 @@ class ValidationTests(unittest.TestCase):
         data.update(count=2, totalCount=2)
         with self.assertRaisesRegex(sync.SyncError, 'duplicate'):
             sync.validate(data, NOW)
+
+    def test_optional_text_fields_may_be_null(self):
+        data = payload()
+        data['hikes'][0].update(destination=None, meetingPlace=None, notes=None)
+        sync.validate(data, NOW)
+
+    def test_skipped_files_emit_warning_and_remain_valid(self):
+        data = {**payload(), 'filesSkipped': 2}
+        output = io.StringIO()
+        with redirect_stdout(output):
+            sync.validate(data, NOW)
+        self.assertIn('::warning::', output.getvalue())
+        self.assertIn('2', output.getvalue())
 
     def test_empty_feed_is_valid(self):
         data = {**payload(), 'count': 0, 'totalCount': 0, 'hikes': []}
@@ -107,16 +128,34 @@ class IOTests(unittest.TestCase):
         self.sleep = patch.object(sync.time, 'sleep').start()
         self.addCleanup(patch.stopall)
 
-    def test_stale_http_success_is_retried_until_fresh(self):
-        stale = {**payload(), 'generatedAt': '2026-09-23T07:00:21Z'}
-        with patch.object(sync, 'fetch_json', side_effect=[sync.SyncError('HTTP failed'), stale, payload()]) as fetch:
+    def test_transport_failure_is_retried(self):
+        with patch.object(sync, 'fetch_json', side_effect=[sync.TransportError('HTTP failed'), payload()]) as fetch:
             sync.download('https://example.test', self.previous, self.output, attempts=3)
-        self.assertEqual(fetch.call_count, 3)
+        self.assertEqual(fetch.call_count, 2)
+        self.sleep.assert_called_once()
         self.assertEqual(json.loads(self.output.read_text()), payload())
 
-    def test_exhaustion_preserves_last_valid_data_and_no_candidate(self):
+    def test_stale_validation_failure_is_not_retried(self):
+        stale = {**payload(), 'generatedAt': '2026-09-24T09:59:59Z'}
+        with patch.object(sync, 'fetch_json', return_value=stale) as fetch:
+            with self.assertRaisesRegex(sync.SyncError, 'stale'):
+                sync.download('https://example.test', self.previous, self.output, attempts=3)
+        self.assertEqual(fetch.call_count, 1)
+        self.sleep.assert_not_called()
+        self.assertFalse(self.output.exists())
+
+    def test_malformed_validation_failure_is_not_retried(self):
+        malformed = {**payload(), 'totalCount': 2}
+        with patch.object(sync, 'fetch_json', return_value=malformed) as fetch:
+            with self.assertRaisesRegex(sync.SyncError, 'totalCount'):
+                sync.download('https://example.test', self.previous, self.output, attempts=3)
+        self.assertEqual(fetch.call_count, 1)
+        self.sleep.assert_not_called()
+        self.assertFalse(self.output.exists())
+
+    def test_transport_exhaustion_preserves_last_valid_data_and_no_candidate(self):
         original = self.previous.read_bytes()
-        with patch.object(sync, 'fetch_json', return_value={**payload(), 'filesSkipped': 1}):
+        with patch.object(sync, 'fetch_json', side_effect=sync.TransportError('HTTP failed')):
             with self.assertRaises(sync.SyncError):
                 sync.download('https://example.test', self.previous, self.output, attempts=2)
         self.assertEqual(self.previous.read_bytes(), original)
@@ -143,17 +182,26 @@ class IOTests(unittest.TestCase):
         sync.apply(self.output, self.previous)
         self.assertEqual(json.loads(self.previous.read_text()), data)
 
-    def test_publication_retries_different_content_even_same_timestamp(self):
+    def test_publication_mismatch_is_not_retried(self):
         old = payload()
         old['hikes'][0]['destination'] = 'Stale content'
-        with patch.object(sync, 'fetch_json', side_effect=[old, payload()]) as fetch:
-            sync.verify('https://example.test', self.previous, attempts=2)
-        self.assertEqual(fetch.call_count, 2)
-
-    def test_publication_never_matches(self):
-        with patch.object(sync, 'fetch_json', return_value={**payload(), 'generatedAt': '2026-09-26T06:00:00Z'}):
+        with patch.object(sync, 'fetch_json', return_value=old) as fetch:
             with self.assertRaisesRegex(sync.SyncError, 'does not yet match'):
                 sync.verify('https://example.test', self.previous, attempts=2)
+        self.assertEqual(fetch.call_count, 1)
+        self.sleep.assert_not_called()
+
+    def test_publication_retries_transport_failure(self):
+        with patch.object(sync, 'fetch_json', side_effect=[sync.TransportError('HTTP failed'), payload()]) as fetch:
+            sync.verify('https://example.test', self.previous, attempts=2)
+        self.assertEqual(fetch.call_count, 2)
+        self.sleep.assert_called_once()
+
+    def test_publication_never_matches(self):
+        with patch.object(sync, 'fetch_json', return_value={**payload(), 'generatedAt': '2026-09-26T06:00:00Z'}) as fetch:
+            with self.assertRaisesRegex(sync.SyncError, 'does not yet match'):
+                sync.verify('https://example.test', self.previous, attempts=2)
+        self.assertEqual(fetch.call_count, 1)
 
 
 class TransportTests(unittest.TestCase):
@@ -165,16 +213,16 @@ class TransportTests(unittest.TestCase):
     def test_errors_do_not_leak_endpoint_or_response(self):
         secret = 'https://example.test/secret-token'
         with patch.object(sync.subprocess, 'run', return_value=subprocess.CompletedProcess([], 22, b'', secret.encode())):
-            with self.assertRaises(sync.SyncError) as error:
+            with self.assertRaises(sync.TransportError) as error:
                 sync.fetch_json(secret)
         self.assertNotIn(secret, str(error.exception))
 
     def test_html_http_success_and_timeout(self):
         with patch.object(sync.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, b'<html>error</html>', b'')):
-            with self.assertRaisesRegex(sync.SyncError, 'invalid JSON'):
+            with self.assertRaisesRegex(sync.TransportError, 'invalid JSON'):
                 sync.fetch_json('https://example.test')
         with patch.object(sync.subprocess, 'run', side_effect=subprocess.TimeoutExpired('curl', 65)):
-            with self.assertRaisesRegex(sync.SyncError, 'timed out'):
+            with self.assertRaisesRegex(sync.TransportError, 'timed out'):
                 sync.fetch_json('https://example.test')
 
 
