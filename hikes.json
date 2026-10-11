@@ -1,10 +1,10 @@
 {
   "generatedAt": "2026-10-11T03:16:49Z",
-  "servedAt": "2026-10-11T10:19:38.818Z",
-  "today": "2026-10-11",
+  "servedAt": "2026-10-11T23:59:40.054Z",
+  "today": "2026-10-12",
   "filesRead": 52,
   "filesSkipped": 0,
-  "count": 4,
+  "count": 3,
   "totalCount": 18,
   "hikes": [
     {
@@ -413,7 +413,7 @@
         "https://lh3.googleusercontent.com/d/1xkN19ssrHzKKNzpKXmgSv86xcqNo9FhM"
       ],
       "image": "https://lh3.googleusercontent.com/d/1roghXI1pnRLctVxdOJymh9q7b0l4DMzF",
-      "past": false
+      "past": true
     },
     {
       "id": "DeJ6PxmN-xp",
