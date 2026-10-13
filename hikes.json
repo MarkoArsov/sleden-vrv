@@ -1,10 +1,10 @@
 {
   "generatedAt": "2026-10-12T20:16:54Z",
-  "servedAt": "2026-10-12T20:26:01.842Z",
-  "today": "2026-10-12",
+  "servedAt": "2026-10-13T02:14:57.824Z",
+  "today": "2026-10-13",
   "filesRead": 55,
   "filesSkipped": 0,
-  "count": 5,
+  "count": 4,
   "totalCount": 20,
   "hikes": [
     {
@@ -435,7 +435,7 @@
         "https://lh3.googleusercontent.com/d/1YZ6eUZlTSUqZHBxluNeyVhWXWsYuYoHd"
       ],
       "image": "https://lh3.googleusercontent.com/d/1YZ6eUZlTSUqZHBxluNeyVhWXWsYuYoHd",
-      "past": false
+      "past": true
     },
     {
       "id": "DeLntc9Migj",
@@ -510,8 +510,10 @@
       "detailsFrom": "caption",
       "sourceUrl": "https://www.instagram.com/p/DeZ7tEWKCch/",
       "postedAt": "2026-10-12T18:59:21.000Z",
-      "images": [],
-      "image": null,
+      "images": [
+        "https://lh3.googleusercontent.com/d/1T4ccHgGM1YvryROrUD8TGMWXBDrkGqys"
+      ],
+      "image": "https://lh3.googleusercontent.com/d/1T4ccHgGM1YvryROrUD8TGMWXBDrkGqys",
       "past": false
     },
     {
