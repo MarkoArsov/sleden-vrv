@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-10-15T03:17:11Z",
-  "servedAt": "2026-10-15T08:36:15.070Z",
+  "generatedAt": "2026-10-15T20:16:56Z",
+  "servedAt": "2026-10-15T21:47:23.019Z",
   "today": "2026-10-15",
-  "filesRead": 59,
+  "filesRead": 60,
   "filesSkipped": 0,
-  "count": 5,
-  "totalCount": 21,
+  "count": 6,
+  "totalCount": 22,
   "hikes": [
     {
       "id": "Dctkp-FIrn-",
@@ -457,6 +457,28 @@
         "https://lh3.googleusercontent.com/d/1_xsNIQwol_ZLsxseB3YGyXX1L-A-CrXQ"
       ],
       "image": "https://lh3.googleusercontent.com/d/1_xsNIQwol_ZLsxseB3YGyXX1L-A-CrXQ",
+      "past": false
+    },
+    {
+      "id": "Dehu2OBtPK_",
+      "club": "pskh2o",
+      "date": "2026-10-18",
+      "time": null,
+      "destination": "Црн Врв на Шар Планина",
+      "destinationEn": "Crn Vrv, Shar Mountain",
+      "meetingPoint": null,
+      "price": null,
+      "difficulty": null,
+      "difficultyEn": null,
+      "caption": "18.10.2026 (Недела) – ЦРН ВРВ НА ШАР ПЛАНИНА  Опис на акцијата во коментар ⬇️",
+      "captionEn": "18.10.2026 (Sunday) – CRN VRV ON SHAR MOUNTAIN  Description of the activity in the comments ⬇️",
+      "detailsFrom": "caption",
+      "sourceUrl": "https://www.instagram.com/p/Dehu2OBtPK_/",
+      "postedAt": "2026-10-15T19:41:54.000Z",
+      "images": [
+        "https://lh3.googleusercontent.com/d/1Z3ZNPajiOOiGtPcC_Y8qX5wjF7zSV1L1"
+      ],
+      "image": "https://lh3.googleusercontent.com/d/1Z3ZNPajiOOiGtPcC_Y8qX5wjF7zSV1L1",
       "past": false
     },
     {
