@@ -1,10 +1,10 @@
 {
   "generatedAt": "2026-10-23T03:17:28Z",
-  "servedAt": "2026-10-23T08:50:52.749Z",
-  "today": "2026-10-23",
+  "servedAt": "2026-10-24T00:02:33.854Z",
+  "today": "2026-10-24",
   "filesRead": 69,
   "filesSkipped": 0,
-  "count": 5,
+  "count": 2,
   "totalCount": 23,
   "hikes": [
     {
@@ -501,7 +501,7 @@
         "https://lh3.googleusercontent.com/d/1zpHEST3rrtSQfRj79F1tiviivAbSUqNl"
       ],
       "image": "https://lh3.googleusercontent.com/d/1zpHEST3rrtSQfRj79F1tiviivAbSUqNl",
-      "past": false
+      "past": true
     },
     {
       "id": "DeZnC8MikC9",
@@ -536,7 +536,7 @@
         "https://lh3.googleusercontent.com/d/1_NFxPIG_DCRSIwbH5_IMWMfHZxZxjCKH"
       ],
       "image": "https://lh3.googleusercontent.com/d/1wA2s3qEO9LOhQLApK6mPStcWbuwJC7aM",
-      "past": false
+      "past": true
     },
     {
       "id": "DeZ7tEWKCch",
@@ -558,7 +558,7 @@
         "https://lh3.googleusercontent.com/d/1T4ccHgGM1YvryROrUD8TGMWXBDrkGqys"
       ],
       "image": "https://lh3.googleusercontent.com/d/1T4ccHgGM1YvryROrUD8TGMWXBDrkGqys",
-      "past": false
+      "past": true
     },
     {
       "id": "DeOks_KiuaS",
