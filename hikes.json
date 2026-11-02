@@ -1,10 +1,10 @@
 {
   "generatedAt": "2026-11-01T08:16:24Z",
-  "servedAt": "2026-11-01T10:51:42.893Z",
-  "today": "2026-11-01",
+  "servedAt": "2026-11-02T01:04:01.831Z",
+  "today": "2026-11-02",
   "filesRead": 82,
   "filesSkipped": 0,
-  "count": 3,
+  "count": 1,
   "totalCount": 26,
   "hikes": [
     {
@@ -646,7 +646,7 @@
         "https://lh3.googleusercontent.com/d/1cf035jDxBk5gK__8IcCOY2fss-uWm7RY"
       ],
       "image": "https://lh3.googleusercontent.com/d/1cf035jDxBk5gK__8IcCOY2fss-uWm7RY",
-      "past": false
+      "past": true
     },
     {
       "id": "De_g-cTN74W",
@@ -668,7 +668,7 @@
         "https://lh3.googleusercontent.com/d/1xIVzA5v5lK4vq3ZFDJnRFd4AdAigTll2"
       ],
       "image": "https://lh3.googleusercontent.com/d/1xIVzA5v5lK4vq3ZFDJnRFd4AdAigTll2",
-      "past": false
+      "past": true
     },
     {
       "id": "DfEfR4_s0yx",
